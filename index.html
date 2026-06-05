@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    font-family:Arial, sans-serif;
+    background:#111;
+    color:white;
+    text-align:center;
+    min-height:100vh;
+}
+
+.container{
+    padding:20px;
+}
+
+select,input,button{
+    width:90%;
+    max-width:400px;
+    padding:14px;
+    margin:8px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+}
+
+button{
+    background:#1976d2;
+    color:white;
+    font-weight:bold;
+}
+
+#scanner{
+    width:100%;
+    margin-top:15px;
+}
+
+.result-screen{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:9999;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+.approved{
+    background:#0f9d58;
+}
+
+.denied{
+    background:#d93025;
+}
+
+.big-status{
+    font-size:52px;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.info{
+    font-size:22px;
+    margin:5px;
+}
+
+.hidden{
+    display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>QR Entry Scanner</h2>
+
+<select id="authority">
+    <option>Loading Authorities...</option>
+</select>
+
+<input
+    type="password"
+    id="passcode"
+    placeholder="Authority Passcode">
+
+<button onclick="loginAndStart()">
+Start Scanner
+</button>
+
+<br>
+<input
+    id="manualSearch"
+    placeholder="Search by Unique ID or Name">
+
+<button onclick="manualSearch()">
+🔍 Manual Search
+</button>
+    
+<div id="scanner"></div>
+
+</div>
+
+<div id="resultScreen" class="result-screen">
+    <div id="resultContent"></div>
+</div>
+
+<script>
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwV2Eq3qAA8IcggsWN5tGDCiOaEFst32ftKEmoXTfQx4HchqT6W5UQqW6ny_FajjTcu9Q/exec";
+
+let html5QrCode = null;
+let currentAuthority = "";
+let isProcessing = false;
+let lastScan = "";
+let lastScanTime = 0;
+
+/*
+--------------------------------------------------
+LOAD AUTHORITIES
+--------------------------------------------------
+*/
+
+loadAuthorities();
+
+function loadAuthorities(){
+
+    fetch(API_URL + "?action=authorities")
+    .then(r => r.json())
+    .then(data => {
+
+        const ddl =
+        document.getElementById("authority");
+
+        ddl.innerHTML =
+        '<option value="">Select Security Authority</option>';
+
+        data.authorities.forEach(a => {
+
+            ddl.innerHTML +=
+            `<option value="${a}">${a}</option>`;
+
+        });
+
+    });
+
+}
+
+/*
+--------------------------------------------------
+LOGIN
+--------------------------------------------------
+*/
+
+function loginAndStart(){
+
+    const authority =
+    document.getElementById("authority").value;
+
+    const passcode =
+    document.getElementById("passcode").value;
+
+    if(!authority){
+        alert("Select Security Authority");
+        return;
+    }
+
+    if(!passcode){
+        alert("Enter Passcode");
+        return;
+    }
+
+    fetch(
+        API_URL +
+        "?action=login" +
+        "&authority=" + encodeURIComponent(authority) +
+        "&passcode=" + encodeURIComponent(passcode)
+    )
+    .then(r => r.json())
+    .then(res => {
+
+        if(res.status === "AUTHORIZED"){
+
+            currentAuthority = authority;
+
+            startScanner();
+
+        }else{
+
+            alert("Invalid Authority Passcode");
+
+        }
+
+    });
+
+}
+
+/*
+--------------------------------------------------
+START SCANNER
+--------------------------------------------------
+*/
+
+function startScanner(){
+
+    document.getElementById("authority").disabled=true;
+    document.getElementById("passcode").disabled=true;
+
+    html5QrCode =
+    new Html5Qrcode("scanner");
+
+    html5QrCode.start(
+
+        { facingMode: "environment" },
+
+        {
+            fps:10,
+            qrbox:250
+        },
+
+        onScanSuccess
+
+    );
+
+}
+
+/*
+--------------------------------------------------
+SCAN
+--------------------------------------------------
+*/
+
+function onScanSuccess(decodedText){
+
+    if(isProcessing) return;
+
+    const now = Date.now();
+
+    if(
+        decodedText === lastScan &&
+        (now - lastScanTime) < 3000
+    ){
+        return;
+    }
+
+    lastScan = decodedText;
+    lastScanTime = now;
+
+    isProcessing = true;
+
+    fetch(
+        API_URL +
+        "?action=scan" +
+        "&id=" + encodeURIComponent(decodedText.trim()) +
+        "&authority=" + encodeURIComponent(currentAuthority)
+    )
+    .then(r => r.json())
+    .then(showResult)
+    .catch(err => {
+
+        alert("Scan Error: " + err);
+
+        isProcessing = false;
+
+    });
+
+}
+/*
+--------------------------------------------------
+RESULT UI
+--------------------------------------------------
+*/
+
+function showResult(res){
+
+    const screen =
+    document.getElementById("resultScreen");
+
+    const content =
+    document.getElementById("resultContent");
+
+    if(res.status === "APPROVED"){
+
+        playSuccess();
+
+        screen.className =
+        "result-screen approved";
+
+        content.innerHTML = `
+
+            <div class="big-status">
+            ✓ APPROVED
+            </div>
+
+            <div class="info">
+            Unique ID: ${res.id}
+            </div>
+
+            <div class="info">
+            Name: ${res.name}
+            </div>
+
+            <div class="info">
+            Gender: ${res.gender}
+            </div>
+
+            <div class="info">
+            Age: ${res.age}
+            </div>
+
+            <div class="info">
+            Facilitator: ${res.facilitator}
+            </div>
+
+            <div class="info">
+            Passcode: ${res.passcode}
+            </div>
+
+            <div class="info">
+            Authority: ${currentAuthority}
+            </div>
+
+            <br><br>
+
+            <button
+                onclick="continueScanning()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:white;
+                    color:black;
+                    font-weight:bold;
+                    cursor:pointer;
+                ">
+                CONTINUE
+            </button>
+
+        `;
+
+    }else{
+
+        playFailure();
+
+        screen.className =
+        "result-screen denied";
+
+        content.innerHTML = `
+
+            <div class="big-status">
+            ✖ DENIED
+            </div>
+        
+            <div class="info">
+            Unknown QR Code
+            </div>
+        
+            <div class="info">
+            ${res.id}
+            </div>
+        
+            <br><br>
+        
+            <button
+                onclick="continueScanning()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:white;
+                    color:black;
+                    font-weight:bold;
+                ">
+                CONTINUE
+            </button>
+        
+            <br><br>
+        
+            <button
+                onclick="openManualVerification()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:#ffeb3b;
+                    color:black;
+                    font-weight:bold;
+                ">
+                MANUAL VERIFY
+            </button>
+        
+        `;
+
+    }
+
+    screen.style.display = "flex";
+
+}
+
+function continueScanning(){
+
+    document.getElementById("resultScreen").style.display = "none";
+
+    isProcessing = false;
+
+}
+
+function manualSearch(){
+
+    if(!currentAuthority){
+
+        alert(
+          "Login as Security Authority first"
+        );
+
+        return;
+    }
+    
+    const query =
+    document.getElementById("manualSearch")
+    .value
+    .trim();
+
+    if(!query){
+        alert("Enter Name or Unique ID");
+        return;
+    }
+
+    fetch(
+        API_URL +
+        "?action=search" +
+        "&query=" +
+        encodeURIComponent(query) +
+        "&authority=" +
+        encodeURIComponent(currentAuthority)
+    )
+    .then(r => r.json())
+    .then(showResult)
+    .catch(err => {
+
+        alert("Search Error: " + err);
+
+    });
+
+}
+/*
+--------------------------------------------------
+SUCCESS BEEP
+--------------------------------------------------
+*/
+
+function playSuccess(){
+
+    const ctx =
+    new(window.AudioContext ||
+    window.webkitAudioContext)();
+
+    const osc =
+    ctx.createOscillator();
+
+    const gain =
+    ctx.createGain();
+
+    osc.type="sine";
+    osc.frequency.value=900;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    gain.gain.value=0.3;
+
+    osc.start();
+
+    osc.stop(ctx.currentTime + 0.15);
+
+}
+
+function openManualVerification(){
+
+    document.getElementById(
+        "manualModal"
+    ).style.display = "block";
+
+}
+
+function closeManualVerification(){
+
+    document.getElementById(
+        "manualModal"
+    ).style.display = "none";
+
+}
+
+function submitManualVerification(){
+
+    const uniqueId =
+    document.getElementById(
+        "manualUniqueId"
+    ).value.trim();
+
+    const name =
+    document.getElementById(
+        "manualName"
+    ).value.trim();
+
+    const facilitator =
+    document.getElementById(
+        "manualFacilitator"
+    ).value.trim();
+
+    const passcode =
+    document.getElementById(
+        "manualPasscode"
+    ).value.trim();
+
+    fetch(
+        API_URL +
+        "?action=manualVerify" +
+        "&uniqueId=" + encodeURIComponent(uniqueId) +
+        "&name=" + encodeURIComponent(name) +
+        "&facilitator=" + encodeURIComponent(facilitator) +
+        "&passcode=" + encodeURIComponent(passcode) +
+        "&authority=" + encodeURIComponent(currentAuthority)
+    )
+    .then(r => r.json())
+    .then(res => {
+
+        closeManualVerification();
+
+        showResult(res);
+
+    });
+
+}
+/*
+--------------------------------------------------
+FAILURE ALARM
+--------------------------------------------------
+*/
+
+function playFailure(){
+
+    const ctx =
+    new(window.AudioContext ||
+    window.webkitAudioContext)();
+
+    [0,0.25,0.5].forEach(offset => {
+
+        const osc =
+        ctx.createOscillator();
+
+        const gain =
+        ctx.createGain();
+
+        osc.type="sawtooth";
+        osc.frequency.value=750;
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        gain.gain.setValueAtTime(
+            0.4,
+            ctx.currentTime + offset
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.01,
+            ctx.currentTime + offset + 0.18
+        );
+
+        osc.start(
+            ctx.currentTime + offset
+        );
+
+        osc.stop(
+            ctx.currentTime + offset + 0.18
+        );
+
+    });
+
+}
+
+</script>
+        placeholder="Name">
+
+    <input
+        id="manualFacilitator"
+        placeholder="Facilitator">
+
+    <input
+        id="manualPasscode"
+        placeholder="Passcode">
+
+    <br>
+
+    <button onclick="submitManualVerification()">
+        VERIFY
+    </button>
+
+    <button onclick="closeManualVerification()">
+        CANCEL
+    </button>
+
+</div>
+    
+</body>
+</html>
