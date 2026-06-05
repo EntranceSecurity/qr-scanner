@@ -103,15 +103,6 @@ button{
 <button onclick="loginAndStart()">
 Start Scanner
 </button>
-
-<br>
-<input
-    id="manualSearch"
-    placeholder="Search by Unique ID or Name">
-
-<button onclick="manualSearch()">
-🔍 Manual Search
-</button>
     
 <div id="scanner"></div>
 
@@ -425,44 +416,7 @@ function continueScanning(){
 
 }
 
-function manualSearch(){
 
-    if(!currentAuthority){
-
-        alert(
-          "Login as Security Authority first"
-        );
-
-        return;
-    }
-    
-    const query =
-    document.getElementById("manualSearch")
-    .value
-    .trim();
-
-    if(!query){
-        alert("Enter Name or Unique ID");
-        return;
-    }
-
-    fetch(
-        API_URL +
-        "?action=search" +
-        "&query=" +
-        encodeURIComponent(query) +
-        "&authority=" +
-        encodeURIComponent(currentAuthority)
-    )
-    .then(r => r.json())
-    .then(showResult)
-    .catch(err => {
-
-        alert("Search Error: " + err);
-
-    });
-
-}
 /*
 --------------------------------------------------
 SUCCESS BEEP
@@ -601,6 +555,30 @@ function playFailure(){
 }
 
 </script>
+
+<div
+    id="manualModal"
+    style="
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:#111;
+        z-index:10000;
+        padding-top:40px;
+        box-sizing:border-box;
+    ">
+
+    <h2>Manual Verification</h2>
+
+    <input
+        id="manualUniqueId"
+        placeholder="Unique ID">
+
+    <p>OR</p>
+
     <input
         id="manualName"
         placeholder="Name">
@@ -624,6 +602,5 @@ function playFailure(){
     </button>
 
 </div>
-    
 </body>
 </html>
