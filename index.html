@@ -124,7 +124,14 @@ Start Scanner
 </button>
     
 <div id="scanner"></div>
+<br>
 
+<button
+id="addUserMainBtn"
+onclick="openAddUserModal()"
+style="display:none;background:#4caf50;">
+ADD NEW USER
+</button>
 </div>
 
 <div id="resultScreen" class="result-screen">
@@ -252,9 +259,15 @@ function loginAndStart(){
         if(res.status === "AUTHORIZED"){
 
             currentAuthority = authority;
-
+        
             startScanner();
-
+        
+            document
+            .getElementById(
+              "addUserMainBtn"
+            )
+            .style.display = "inline-block";
+        
         }else{
 
             alert("Invalid Authority Passcode");
@@ -479,22 +492,6 @@ function showResult(res){
                 ">
                 MANUAL VERIFY
             </button>
-
-            <br><br>
-            
-            <button
-                onclick="openAddUserModal()"
-                style="
-                    padding:16px 40px;
-                    font-size:22px;
-                    border:none;
-                    border-radius:12px;
-                    background:#4caf50;
-                    color:white;
-                    font-weight:bold;
-                ">
-                ADD NEW USER
-            </button>
         
         `;
 
@@ -654,14 +651,41 @@ let suggestedUserId = "";
 
 function openAddUserModal(){
 
-    document
-    .getElementById(
+    suggestedUserId = "";
+
+    document.getElementById(
+      "generatedId"
+    ).innerHTML = "";
+
+    document.getElementById(
+      "newName"
+    ).value = "";
+
+    document.getElementById(
+      "newGender"
+    ).value = "";
+
+    document.getElementById(
+      "newAge"
+    ).value = "";
+
+    document.getElementById(
+      "newPasscode"
+    ).value = "";
+
+    document.getElementById(
+      "createUserBtn"
+    ).disabled = true;
+
+    document.getElementById(
+      "createUserBtn"
+    ).style.opacity = "0.5";
+
+    document.getElementById(
       "addUserModal"
-    )
-    .style.display = "block";
+    ).style.display = "block";
 
 }
-
 function closeAddUserModal(){
 
     document
@@ -672,32 +696,33 @@ function closeAddUserModal(){
     
     }
     
-    function generateUserId(){
-        const name =
+function generateUserId(){
+
+    const name =
     document.getElementById(
       "newName"
     ).value.trim();
-    
+
     const facilitator =
     document.getElementById(
       "newFacilitator"
     ).value.trim();
-    
+
     const gender =
     document.getElementById(
       "newGender"
     ).value.trim();
-    
+
     const age =
     document.getElementById(
       "newAge"
     ).value.trim();
-    
+
     const passcode =
     document.getElementById(
       "newPasscode"
     ).value.trim();
-    
+
     if(
       !name ||
       !facilitator ||
@@ -705,14 +730,15 @@ function closeAddUserModal(){
       !age ||
       !passcode
     ){
-    
+
         alert(
           "Please complete all fields."
         );
-    
+
         return;
-    
+
     }
+
     document.getElementById(
       "generateIdBtn"
     ).disabled = true;
@@ -720,16 +746,6 @@ function closeAddUserModal(){
     document.getElementById(
       "busyOverlay"
     ).style.display = "flex";
-
-    const name =
-    document.getElementById(
-      "newName"
-    ).value;
-
-    const facilitator =
-    document.getElementById(
-      "newFacilitator"
-    ).value;
 
     fetch(
       API_URL +
@@ -739,55 +755,63 @@ function closeAddUserModal(){
       "&facilitator=" +
       encodeURIComponent(facilitator)
     )
-    .then(r=>r.json())
-    .then(res=>{
+    .then(r => r.json())
+    .then(res => {
 
         console.log(res);
-    
+
         document.getElementById(
           "busyOverlay"
         ).style.display = "none";
-    
+
         document.getElementById(
           "generateIdBtn"
         ).disabled = false;
-    
-        if(
-          !res.uniqueId
-        ){
-    
+
+        if(!res.uniqueId){
+
             alert(
+              res.error ||
               "Unable to generate ID"
             );
-    
+
             return;
-    
+
         }
-    
+
         suggestedUserId =
         res.uniqueId;
-    
+
         document
         .getElementById(
           "generatedId"
         )
-        .innerHTML =
-        "<h3>Generated ID</h3><b>" +
-        res.uniqueId +
-        "</b>";
-    
+        .innerHTML = `
+            <h3>
+            Generated ID
+            </h3>
+
+            <div style="
+                font-size:24px;
+                font-weight:bold;
+                color:#0f9d58;
+            ">
+                ${res.uniqueId}
+            </div>
+        `;
+
         document
         .getElementById(
           "createUserBtn"
         )
         .disabled = false;
-    
+
         document
         .getElementById(
           "createUserBtn"
         )
         .style.opacity = "1";
-    
+
     })
     .catch(err => {
 
@@ -799,7 +823,9 @@ function closeAddUserModal(){
           "generateIdBtn"
         ).disabled = false;
 
-        alert(err);
+        alert(
+          "Error: " + err
+        );
 
     });
 
