@@ -293,22 +293,24 @@ function onScanSuccess(decodedText){
         "&authority=" + encodeURIComponent(currentAuthority)
     )
     .then(r => r.json())
-    .then(showResult)
     .then(res => {
+    
         console.log(
-          "API Time:",
-          Math.round(
-            performance.now() - startTime
-          ) + " ms"
+            "API Time:",
+            Math.round(
+                performance.now() - startTime
+            ) + " ms"
         );
+    
         showResult(res);
+    
     })
     .catch(err => {
-
+    
         alert("Scan Error: " + err);
-
+    
         isProcessing = false;
-
+    
     });
 
 }
@@ -319,6 +321,11 @@ RESULT UI
 */
 
 function showResult(res){
+    if(!res){
+        console.error("Empty response");
+        return;
+    }
+    
     document.getElementById(
         "loadingScreen"
     ).style.display = "none";
