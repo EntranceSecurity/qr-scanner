@@ -130,7 +130,7 @@ Start Scanner
 <script>
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycbzUH7YGjfrh12d9bkf8Jzehgkz7kBH3J1Oqqm0ESxipgks9mDUJU1qhtLJd5fOyz3VoyA/exec";
+"https://script.google.com/macros/s/AKfycbw_bogQZURolh4hprKCW6ojQgJzZhH3DGT9qHFysVRSh77FZWPM1y1R6gHdHfc0PWdFdw/exec";
 
 let html5QrCode = null;
 let currentAuthority = "";
@@ -151,6 +151,38 @@ LOAD AUTHORITIES
 --------------------------------------------------
 */
 
+loadFacilitators();
+
+function loadFacilitators(){
+
+    fetch(
+        API_URL +
+        "?action=facilitators"
+    )
+    .then(r => r.json())
+    .then(data => {
+
+        const ddl =
+        document.getElementById(
+            "newFacilitator"
+        );
+
+        ddl.innerHTML =
+        '<option value="">Select Facilitator</option>';
+
+        data.facilitators.forEach(f => {
+
+            ddl.innerHTML +=
+            `<option value="${f}">
+                ${f}
+            </option>`;
+
+        });
+
+    });
+
+}
+    
 loadAuthorities();
 
 function loadAuthorities(){
@@ -439,6 +471,22 @@ function showResult(res){
                 ">
                 MANUAL VERIFY
             </button>
+
+            <br><br>
+            
+            <button
+                onclick="openAddUserModal()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:#4caf50;
+                    color:white;
+                    font-weight:bold;
+                ">
+                ADD NEW USER
+            </button>
         
         `;
 
@@ -594,6 +642,149 @@ function playFailure(){
 
 }
 
+let suggestedUserId = "";
+
+function openAddUserModal(){
+
+    document
+    .getElementById(
+      "addUserModal"
+    )
+    .style.display = "block";
+
+}
+
+function closeAddUserModal(){
+
+    document
+    .getElementById(
+      "addUserModal"
+    )
+    .style.display = "none";
+
+}
+
+function generateUserId(){
+
+    const name =
+    document.getElementById(
+      "newName"
+    ).value;
+
+    const facilitator =
+    document.getElementById(
+      "newFacilitator"
+    ).value;
+
+    fetch(
+      API_URL +
+      "?action=generateUserId" +
+      "&name=" +
+      encodeURIComponent(name) +
+      "&facilitator=" +
+      encodeURIComponent(facilitator)
+    )
+    .then(r=>r.json())
+    .then(res=>{
+
+        suggestedUserId =
+        res.uniqueId;
+
+        document
+        .getElementById(
+          "generatedId"
+        )
+        .innerHTML =
+        res.uniqueId;
+
+    });
+
+}
+
+    function createUser(){
+
+    fetch(
+      API_URL +
+      "?action=addUser" +
+      "&uniqueId=" +
+      encodeURIComponent(
+        suggestedUserId
+      ) +
+      "&name=" +
+      encodeURIComponent(
+        document.getElementById(
+          "newName"
+        ).value
+      ) +
+      "&gender=" +
+      encodeURIComponent(
+        document.getElementById(
+          "newGender"
+        ).value
+      ) +
+      "&age=" +
+      encodeURIComponent(
+        document.getElementById(
+          "newAge"
+        ).value
+      ) +
+      "&facilitator=" +
+      encodeURIComponent(
+        document.getElementById(
+          "newFacilitator"
+        ).value
+      ) +
+      "&passcode=" +
+      encodeURIComponent(
+        document.getElementById(
+          "newPasscode"
+        ).value
+      )
+    )
+    .then(r=>r.json())
+    .then(res=>{
+
+        closeAddUserModal();
+
+        document.getElementById(
+          "resultScreen"
+        ).style.display = "flex";
+
+        document.getElementById(
+          "resultContent"
+        ).innerHTML = `
+
+        <div class="big-status">
+        ✓ USER CREATED
+        </div>
+
+        <div class="info">
+        ${res.uniqueId}
+        </div>
+
+        <br>
+
+        <img
+        src="https://quickchart.io/qr?text=${res.uniqueId}&size=400"
+        style="width:300px;">
+
+        <br><br>
+
+        Take Screenshot
+
+        <br><br>
+
+        <button
+        onclick="continueScanning()">
+        CONTINUE
+        </button>
+
+        `;
+
+    });
+
+}
+    
 </script>
 
 <div
@@ -654,6 +845,79 @@ if ('serviceWorker' in navigator) {
 }
 
 </script>
+
+<div
+id="addUserModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.9);
+z-index:99999;
+overflow:auto;
+padding-top:40px;
+">
+
+<div
+style="
+max-width:500px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+">
+
+<input
+id="newName"
+placeholder="Name">
+
+<input
+id="newGender"
+placeholder="Gender">
+
+<input
+id="newAge"
+placeholder="Age">
+
+<select id="newFacilitator">
+    <option value="">
+        Loading Facilitators...
+    </option>
+</select>
     
+<input
+id="newPasscode"
+placeholder="Passcode">
+
+<button
+onclick="generateUserId()">
+GENERATE ID
+</button>
+
+<div
+id="generatedId"
+style="
+font-size:22px;
+font-weight:bold;
+margin-top:15px;
+">
+</div>
+
+<button
+onclick="createUser()">
+CREATE USER
+</button>
+
+<button
+onclick="closeAddUserModal()">
+CANCEL
+</button>
+
+</div>
+
+</div>    
 </body>
 </html>
