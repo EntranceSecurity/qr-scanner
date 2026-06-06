@@ -86,6 +86,14 @@ button{
     display:none;
 }
 
+@keyframes spin{
+    0%{
+        transform:rotate(0deg);
+    }
+    100%{
+        transform:rotate(360deg);
+    }
+}
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -666,6 +674,14 @@ function closeAddUserModal(){
 
 function generateUserId(){
 
+    document.getElementById(
+      "generateIdBtn"
+    ).disabled = true;
+
+    document.getElementById(
+      "busyOverlay"
+    ).style.display = "flex";
+
     const name =
     document.getElementById(
       "newName"
@@ -687,6 +703,14 @@ function generateUserId(){
     .then(r=>r.json())
     .then(res=>{
 
+        document.getElementById(
+          "busyOverlay"
+        ).style.display = "none";
+
+        document.getElementById(
+          "generateIdBtn"
+        ).disabled = false;
+
         suggestedUserId =
         res.uniqueId;
 
@@ -697,12 +721,44 @@ function generateUserId(){
         .innerHTML =
         res.uniqueId;
 
+        document
+        .getElementById(
+          "createUserBtn"
+        )
+        .disabled = false;
+
+        document
+        .getElementById(
+          "createUserBtn"
+        )
+        .style.opacity = "1";
+
+    })
+    .catch(err => {
+
+        document.getElementById(
+          "busyOverlay"
+        ).style.display = "none";
+
+        document.getElementById(
+          "generateIdBtn"
+        ).disabled = false;
+
+        alert(err);
+
     });
 
 }
 
-    function createUser(){
+function createUser(){
+    if(!suggestedUserId){
 
+        alert(
+          "Please Generate ID first"
+        );
+    
+        return;
+    }
     fetch(
       API_URL +
       "?action=addUser" +
@@ -874,9 +930,21 @@ border-radius:10px;
 id="newName"
 placeholder="Name">
 
-<input
-id="newGender"
-placeholder="Gender">
+<select id="newGender">
+
+    <option value="">
+    Select Gender
+    </option>
+
+    <option value="M">
+    Male
+    </option>
+
+    <option value="F">
+    Female
+    </option>
+
+</select>
 
 <input
 id="newAge"
@@ -893,6 +961,7 @@ id="newPasscode"
 placeholder="Passcode">
 
 <button
+id="generateIdBtn"
 onclick="generateUserId()">
 GENERATE ID
 </button>
@@ -907,7 +976,12 @@ margin-top:15px;
 </div>
 
 <button
-onclick="createUser()">
+id="createUserBtn"
+onclick="createUser()"
+disabled
+style="
+opacity:0.5;
+">
 CREATE USER
 </button>
 
@@ -919,5 +993,76 @@ CANCEL
 </div>
 
 </div>    
+
+<div
+id="busyOverlay"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:999999;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+color:white;
+font-size:24px;
+">
+
+<div
+style="
+width:60px;
+height:60px;
+border:6px solid #ddd;
+border-top:6px solid white;
+border-radius:50%;
+animation:spin 1s linear infinite;
+">
+</div>
+
+<br>
+
+Processing...
+
+</div>
+
+<div
+id="busyOverlay"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:999999;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+color:white;
+font-size:24px;
+">
+
+<div
+style="
+width:60px;
+height:60px;
+border:6px solid #ddd;
+border-top:6px solid white;
+border-radius:50%;
+animation:spin 1s linear infinite;
+">
+</div>
+
+<br>
+
+Processing...
+
+</div>
+    
 </body>
 </html>
