@@ -65,7 +65,12 @@ button{
 .denied{
     background:#d93025;
 }
-
+    
+#loadingScreen{
+    background:#111;
+    display:none;
+}
+    
 .big-status{
     font-size:52px;
     font-weight:bold;
@@ -117,17 +122,28 @@ Start Scanner
 <div id="resultScreen" class="result-screen">
     <div id="resultContent"></div>
 </div>
-
+<div id="loadingScreen" class="result-screen">
+    <div class="big-status">⏳</div>
+    <div class="info">Verifying...</div>
+</div>
+    
 <script>
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycbwV2Eq3qAA8IcggsWN5tGDCiOaEFst32ftKEmoXTfQx4HchqT6W5UQqW6ny_FajjTcu9Q/exec";
+"https://script.google.com/macros/s/AKfycbzUH7YGjfrh12d9bkf8Jzehgkz7kBH3J1Oqqm0ESxipgks9mDUJU1qhtLJd5fOyz3VoyA/exec";
 
 let html5QrCode = null;
 let currentAuthority = "";
 let isProcessing = false;
 let lastScan = "";
 let lastScanTime = 0;
+setInterval(() => {
+    fetch(
+        API_URL +
+        "?action=ping"
+    ).catch(()=>{});
+
+}, 300000);
 
 /*
 --------------------------------------------------
@@ -228,8 +244,8 @@ function startScanner(){
         { facingMode: "environment" },
 
         {
-            fps:10,
-            qrbox:250
+            fps:20,
+            qrbox:300
         },
 
         onScanSuccess
@@ -261,7 +277,15 @@ function onScanSuccess(decodedText){
     lastScanTime = now;
 
     isProcessing = true;
-
+    if(navigator.vibrate){
+        navigator.vibrate(50);
+    }
+    document.getElementById(
+        "loadingScreen"
+    ).style.display = "flex";
+    
+    const startTime = performance.now();
+    
     fetch(
         API_URL +
         "?action=scan" +
@@ -270,6 +294,15 @@ function onScanSuccess(decodedText){
     )
     .then(r => r.json())
     .then(showResult)
+    .then(res => {
+        console.log(
+          "API Time:",
+          Math.round(
+            performance.now() - startTime
+          ) + " ms"
+        );
+        showResult(res);
+    }
     .catch(err => {
 
         alert("Scan Error: " + err);
@@ -286,7 +319,9 @@ RESULT UI
 */
 
 function showResult(res){
-
+    document.getElementById(
+        "loadingScreen"
+    ).style.display = "none";
     const screen =
     document.getElementById("resultScreen");
 
