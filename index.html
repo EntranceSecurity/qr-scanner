@@ -665,15 +665,54 @@ function openAddUserModal(){
 function closeAddUserModal(){
 
     document
-    .getElementById(
-      "addUserModal"
-    )
-    .style.display = "none";
-
-}
-
-function generateUserId(){
-
+        .getElementById(
+          "addUserModal"
+        )
+        .style.display = "none";
+    
+    }
+    
+    function generateUserId(){
+        const name =
+    document.getElementById(
+      "newName"
+    ).value.trim();
+    
+    const facilitator =
+    document.getElementById(
+      "newFacilitator"
+    ).value.trim();
+    
+    const gender =
+    document.getElementById(
+      "newGender"
+    ).value.trim();
+    
+    const age =
+    document.getElementById(
+      "newAge"
+    ).value.trim();
+    
+    const passcode =
+    document.getElementById(
+      "newPasscode"
+    ).value.trim();
+    
+    if(
+      !name ||
+      !facilitator ||
+      !gender ||
+      !age ||
+      !passcode
+    ){
+    
+        alert(
+          "Please complete all fields."
+        );
+    
+        return;
+    
+    }
     document.getElementById(
       "generateIdBtn"
     ).disabled = true;
@@ -703,36 +742,52 @@ function generateUserId(){
     .then(r=>r.json())
     .then(res=>{
 
+        console.log(res);
+    
         document.getElementById(
           "busyOverlay"
         ).style.display = "none";
-
+    
         document.getElementById(
           "generateIdBtn"
         ).disabled = false;
-
+    
+        if(
+          !res.uniqueId
+        ){
+    
+            alert(
+              "Unable to generate ID"
+            );
+    
+            return;
+    
+        }
+    
         suggestedUserId =
         res.uniqueId;
-
+    
         document
         .getElementById(
           "generatedId"
         )
         .innerHTML =
-        res.uniqueId;
-
+        "<h3>Generated ID</h3><b>" +
+        res.uniqueId +
+        "</b>";
+    
         document
         .getElementById(
           "createUserBtn"
         )
         .disabled = false;
-
+    
         document
         .getElementById(
           "createUserBtn"
         )
         .style.opacity = "1";
-
+    
     })
     .catch(err => {
 
@@ -969,7 +1024,7 @@ GENERATE ID
 <div
 id="generatedId"
 style="
-font-size:22px;
+font-size:24px;
 font-weight:bold;
 margin-top:15px;
 ">
