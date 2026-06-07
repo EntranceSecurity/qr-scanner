@@ -123,23 +123,35 @@ button{
     id="passcode"
     placeholder="Authority Passcode">
 
-<button onclick="loginAndStart()">
-Start Scanner
+<button
+id="loginBtn"
+onclick="loginAndStart()">
+LOGIN
 </button>
     
-<div id="scanner"></div>
+<div
+id="scanner"
+style="display:none;">
+</div>
+    
 <br>
 
-<button onclick="openManualVerification()">
+<button
+id="manualVerifyBtn"
+onclick="openManualVerification()"
+style="display:none;">
 MANUAL VERIFY
 </button>
     
 <button
 id="addUserMainBtn"
 onclick="openAddUserModal()"
-style="display:none;background:#4caf50;">
+style="
+display:none;
+background:#4caf50;">
 ADD NEW USER
 </button>
+    
 </div>
 
 <div id="resultScreen" class="result-screen">
@@ -318,13 +330,25 @@ function loginAndStart(){
 
             currentAuthority = authority;
         
-            startScanner();
+            document
+            .getElementById(
+              "manualVerifyBtn"
+            )
+            .style.display = "inline-block";
         
             document
             .getElementById(
               "addUserMainBtn"
             )
             .style.display = "inline-block";
+        
+            document
+            .getElementById(
+              "loginBtn"
+            )
+            .style.display = "none";
+        
+            startScanner();
         
         }else{
 
@@ -344,8 +368,17 @@ START SCANNER
 
 function startScanner(){
 
-    document.getElementById("authority").disabled=true;
-    document.getElementById("passcode").disabled=true;
+    document.getElementById(
+      "scanner"
+    ).style.display = "block";
+
+    document.getElementById(
+      "authority"
+    ).disabled = true;
+
+    document.getElementById(
+      "passcode"
+    ).disabled = true;
 
     html5QrCode =
     new Html5Qrcode("scanner");
