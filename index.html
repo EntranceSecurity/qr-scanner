@@ -301,8 +301,8 @@ function startScanner(){
         { facingMode: "environment" },
 
         {
-            fps:20,
-            qrbox:300
+            fps:10,
+            qrbox:250
         },
 
         onScanSuccess
@@ -318,7 +318,7 @@ SCAN
 */
 
 function onScanSuccess(decodedText){
-
+    
     if(isProcessing) return;
 
     const now = Date.now();
@@ -580,9 +580,22 @@ function showUserCreated(res){
 }
 function continueScanning(){
 
-    document.getElementById("resultScreen").style.display = "none";
+    document.getElementById(
+      "resultScreen"
+    ).style.display = "none";
 
     isProcessing = false;
+
+    lastScan = "";
+
+    setTimeout(() => {
+
+        window.scrollTo(
+            0,
+            0
+        );
+
+    }, 100);
 
 }
 
