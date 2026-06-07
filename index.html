@@ -153,6 +153,15 @@ display:none;
 background:#4caf50;">
 ADD NEW USER
 </button>
+
+<button
+id="helpBtn"
+onclick="openHelpModal()"
+style="
+display:none;
+background:#607d8b;">
+HELP
+</button>
     
 </div>
 
@@ -190,6 +199,76 @@ let currentAuthority = "";
 let isProcessing = false;
 let lastScan = "";
 let lastScanTime = 0;
+
+const USER_GUIDE_HTML = `
+<h2>User Guide</h2>
+
+<h3>Contents</h3>
+
+<ol>
+<li>Login</li>
+<li>QR Scan</li>
+<li>Manual Verification</li>
+<li>Add New User</li>
+<li>Troubleshooting</li>
+</ol>
+
+<hr>
+
+<h3>1. Login</h3>
+
+<ul>
+<li>Select Security Authority.</li>
+<li>Enter Passcode.</li>
+<li>Click LOGIN.</li>
+</ul>
+
+<h3>2. QR Scan</h3>
+
+<ul>
+<li>Point camera at QR code.</li>
+<li>Wait for vibration and verification.</li>
+<li>Green screen = Approved.</li>
+<li>Red screen = Denied.</li>
+<li>Press CONTINUE for next scan.</li>
+</ul>
+
+<h3>3. Manual Verification</h3>
+
+<ul>
+<li>Use when QR code is unavailable.</li>
+<li>Enter either Unique ID OR Name + Facilitator + Passcode.</li>
+<li>If verified, user details and QR code are displayed.</li>
+<li>Take screenshot if QR needs reprinting.</li>
+</ul>
+
+<h3>4. Add New User</h3>
+
+<ul>
+<li>Enter Name, Gender, Age, Facilitator and Passcode.</li>
+<li>Click GENERATE ID.</li>
+<li>Verify generated ID.</li>
+<li>Click CREATE USER.</li>
+<li>Take screenshot of generated QR code.</li>
+<li>Provide QR code to user for future entry.</li>
+</ul>
+
+<h3>5. Troubleshooting</h3>
+
+<ul>
+<li>If scanner does not respond, press CONTINUE and scan again.</li>
+<li>If login fails, verify Authority and Passcode.</li>
+<li>If Facilitator is unavailable, contact Superadmin.</li>
+<li>If network is unavailable, reconnect and retry.</li>
+</ul>
+
+<hr>
+
+<p>
+Version 1.0
+</p>
+`;
+    
 setInterval(() => {
     fetch(
         API_URL +
@@ -344,6 +423,12 @@ function loginAndStart(){
 
     const passcode =
     document.getElementById("passcode").value;
+
+    document
+    .getElementById(
+      "helpBtn"
+    )
+    .style.display = "inline-block";
 
     if(!authority){
         alert("Select Security Authority");
@@ -1140,6 +1225,31 @@ function generateUserId(){
 
 }
 
+function openHelpModal(){
+
+    document
+    .getElementById(
+      "helpContent"
+    )
+    .innerHTML = USER_GUIDE_HTML;
+
+    document
+    .getElementById(
+      "helpModal"
+    )
+    .style.display = "block";
+
+}
+
+function closeHelpModal(){
+
+    document
+    .getElementById(
+      "helpModal"
+    )
+    .style.display = "none";
+
+}
 function createUser(){
     showBusy(
       "Creating User..."
@@ -1368,6 +1478,38 @@ if ('serviceWorker' in navigator) {
 
 </script>
 
+<div
+id="helpModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+color:black;
+z-index:99999;
+overflow-y:auto;
+padding:20px;
+box-sizing:border-box;
+">
+
+<div id="helpContent"></div>
+
+<br>
+
+<button
+onclick="closeHelpModal()"
+style="
+background:#1976d2;
+color:white;
+">
+CLOSE
+</button>
+
+</div>
+    
 <div
 id="addUserModal"
 style="
