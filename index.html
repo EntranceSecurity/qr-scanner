@@ -158,8 +158,24 @@ ADD NEW USER
     <div id="resultContent"></div>
 </div>
 <div id="loadingScreen" class="result-screen">
-    <div class="big-status">⏳</div>
-    <div class="info">Verifying...</div>
+
+    <div
+    style="
+      width:70px;
+      height:70px;
+      border:8px solid #444;
+      border-top:8px solid white;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    ">
+    </div>
+
+    <br>
+
+    <div class="info">
+    Please wait...
+    </div>
+
 </div>
     
 <script>
@@ -180,6 +196,26 @@ setInterval(() => {
 
 }, 300000);
 
+function showBusy(message){
+
+    document.getElementById(
+      "loadingScreen"
+    ).style.display = "flex";
+
+    document.querySelector(
+      "#loadingScreen .info"
+    ).innerText =
+    message || "Please wait...";
+
+}
+
+function hideBusy(){
+
+    document.getElementById(
+      "loadingScreen"
+    ).style.display = "none";
+
+}
 function showVerifiedUser(res){
 
     const screen =
@@ -317,6 +353,13 @@ function loginAndStart(){
         return;
     }
 
+    showBusy(
+      "Authenticating..."
+    );
+    document
+    .getElementById(
+      "loginBtn"
+    )
     fetch(
         API_URL +
         "?action=login" +
@@ -325,7 +368,12 @@ function loginAndStart(){
     )
     .then(r => r.json())
     .then(res => {
-
+        hideBusy();
+        document
+        .getElementById(
+          "loginBtn"
+        )
+        .disabled = false;
         if(res.status === "AUTHORIZED"){
 
             currentAuthority = authority;
@@ -356,6 +404,17 @@ function loginAndStart(){
 
         }
 
+    })
+    .catch(err => {
+
+        hideBusy();
+        document
+        .getElementById(
+          "loginBtn"
+        )
+        .disabled = false;
+        alert(err);
+    
     });
 
 }
@@ -424,9 +483,9 @@ function onScanSuccess(decodedText){
     if(navigator.vibrate){
         navigator.vibrate(50);
     }
-    document.getElementById(
-        "loadingScreen"
-    ).style.display = "flex";
+    showBusy(
+      "Verifying QR Code..."
+    );
     
     const startTime = performance.now();
     
@@ -470,9 +529,7 @@ function showResult(res){
         return;
     }
     
-    document.getElementById(
-        "loadingScreen"
-    ).style.display = "none";
+    hideBusy();
     const screen =
     document.getElementById("resultScreen");
 
@@ -744,7 +801,9 @@ function submitManualVerification(){
     document.getElementById(
       "busyOverlay"
     ).style.display = "flex";
-
+    showBusy(
+      "Verifying User..."
+    );
     fetch(
         API_URL +
         "?action=manualVerify" +
@@ -757,9 +816,7 @@ function submitManualVerification(){
     .then(r => r.json())
     .then(res => {
 
-        document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
+        hideBusy();
 
         closeManualVerification();
 
@@ -848,10 +905,7 @@ function submitManualVerification(){
     })
     .catch(err => {
 
-        document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
-
+        hideBusy();
         alert(
           "Verification Error: " + err
         );
@@ -1003,10 +1057,10 @@ function generateUserId(){
       "generateIdBtn"
     ).disabled = true;
 
-    document.getElementById(
-      "busyOverlay"
-    ).style.display = "flex";
-
+    showBusy(
+      "Generating User ID..."
+    );
+    
     fetch(
       API_URL +
       "?action=generateUserId" +
@@ -1020,9 +1074,7 @@ function generateUserId(){
 
         console.log(res);
 
-        document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
+        hideBusy();
 
         document.getElementById(
           "generateIdBtn"
@@ -1075,9 +1127,7 @@ function generateUserId(){
     })
     .catch(err => {
 
-        document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
+        hideBusy();
 
         document.getElementById(
           "generateIdBtn"
@@ -1092,7 +1142,10 @@ function generateUserId(){
 }
 
 function createUser(){
-
+    showBusy(
+      "Creating User..."
+    );
+    
     if(!suggestedUserId){
 
         alert(
@@ -1102,9 +1155,7 @@ function createUser(){
         return;
     }
 
-    document.getElementById(
-      "busyOverlay"
-    ).style.display = "flex";
+    hideBusy();
 
     document.getElementById(
       "createUserBtn"
@@ -1152,10 +1203,6 @@ function createUser(){
     .then(res => {
 
         document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
-
-        document.getElementById(
           "createUserBtn"
         ).disabled = false;
 
@@ -1169,7 +1216,8 @@ function createUser(){
             return;
 
         }
-
+        
+        hideBusy();
         closeAddUserModal();
 
         const screen =
@@ -1246,9 +1294,7 @@ function createUser(){
     })
     .catch(err => {
 
-        document.getElementById(
-          "busyOverlay"
-        ).style.display = "none";
+        hideBusy();
 
         document.getElementById(
           "createUserBtn"
