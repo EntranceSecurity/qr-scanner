@@ -885,116 +885,121 @@ function submitManualVerification(){
         "manualPasscode"
     ).value.trim();
 
+    closeManualVerification()
+    
     showBusy(
       "Verifying User..."
     );
-    fetch(
-        API_URL +
-        "?action=manualVerify" +
-        "&uniqueId=" + encodeURIComponent(uniqueId) +
-        "&name=" + encodeURIComponent(name) +
-        "&facilitator=" + encodeURIComponent(facilitator) +
-        "&passcode=" + encodeURIComponent(passcode) +
-        "&authority=" + encodeURIComponent(currentAuthority)
-    )
-    .then(r => r.json())
-    .then(res => {
 
-        hideBusy();
-
-        closeManualVerification();
-
-        if(res.status === "APPROVED"){
-
-            const screen =
-            document.getElementById(
-              "resultScreen"
+    setTimeout(() => {
+        fetch(
+            API_URL +
+            "?action=manualVerify" +
+            "&uniqueId=" + encodeURIComponent(uniqueId) +
+            "&name=" + encodeURIComponent(name) +
+            "&facilitator=" + encodeURIComponent(facilitator) +
+            "&passcode=" + encodeURIComponent(passcode) +
+            "&authority=" + encodeURIComponent(currentAuthority)
+        )
+        .then(r => r.json())
+        .then(res => {
+    
+            hideBusy();
+    
+            closeManualVerification();
+    
+            if(res.status === "APPROVED"){
+    
+                const screen =
+                document.getElementById(
+                  "resultScreen"
+                );
+    
+                const content =
+                document.getElementById(
+                  "resultContent"
+                );
+    
+                screen.className =
+                "result-screen approved";
+    
+                content.innerHTML = `
+    
+                    <div class="big-status">
+                    ✓ VERIFIED
+                    </div>
+    
+                    <div class="info">
+                    Unique ID: ${res.id}
+                    </div>
+    
+                    <div class="info">
+                    Name: ${res.name}
+                    </div>
+    
+                    <div class="info">
+                    Facilitator: ${res.facilitator}
+                    </div>
+    
+                    <div class="info">
+                    Passcode: ${res.passcode}
+                    </div>
+    
+                    <br>
+    
+                    <img
+                    src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
+                    style="
+                        width:280px;
+                        background:white;
+                        padding:10px;
+                        border-radius:12px;
+                    ">
+    
+                    <br><br>
+    
+                    <div class="info">
+                    Take Screenshot if QR needs re-printing
+                    </div>
+    
+                    <br><br>
+    
+                    <button
+                    onclick="continueScanning()"
+                    style="
+                        padding:16px 40px;
+                        font-size:22px;
+                        border:none;
+                        border-radius:12px;
+                        background:white;
+                        color:black;
+                        font-weight:bold;
+                        cursor:pointer;
+                    ">
+                    CONTINUE
+                    </button>
+    
+                `;
+    
+                screen.style.display =
+                "flex";
+    
+            }else{
+    
+                showResult(res);
+    
+            }
+    
+        })
+        .catch(err => {
+    
+            hideBusy();
+            alert(
+              "Verification Error: " + err
             );
-
-            const content =
-            document.getElementById(
-              "resultContent"
-            );
-
-            screen.className =
-            "result-screen approved";
-
-            content.innerHTML = `
-
-                <div class="big-status">
-                ✓ VERIFIED
-                </div>
-
-                <div class="info">
-                Unique ID: ${res.id}
-                </div>
-
-                <div class="info">
-                Name: ${res.name}
-                </div>
-
-                <div class="info">
-                Facilitator: ${res.facilitator}
-                </div>
-
-                <div class="info">
-                Passcode: ${res.passcode}
-                </div>
-
-                <br>
-
-                <img
-                src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
-                style="
-                    width:280px;
-                    background:white;
-                    padding:10px;
-                    border-radius:12px;
-                ">
-
-                <br><br>
-
-                <div class="info">
-                Take Screenshot if QR needs re-printing
-                </div>
-
-                <br><br>
-
-                <button
-                onclick="continueScanning()"
-                style="
-                    padding:16px 40px;
-                    font-size:22px;
-                    border:none;
-                    border-radius:12px;
-                    background:white;
-                    color:black;
-                    font-weight:bold;
-                    cursor:pointer;
-                ">
-                CONTINUE
-                </button>
-
-            `;
-
-            screen.style.display =
-            "flex";
-
-        }else{
-
-            showResult(res);
-
-        }
-
-    })
-    .catch(err => {
-
-        hideBusy();
-        alert(
-          "Verification Error: " + err
-        );
-
-    });
+    
+        });
+    }, 50);
 
 }
 /*
