@@ -130,6 +130,10 @@ Start Scanner
 <div id="scanner"></div>
 <br>
 
+<button onclick="openManualVerification()">
+MANUAL VERIFY
+</button>
+    
 <button
 id="addUserMainBtn"
 onclick="openAddUserModal()"
@@ -164,6 +168,56 @@ setInterval(() => {
 
 }, 300000);
 
+function showVerifiedUser(res){
+
+    const screen =
+    document.getElementById(
+      "resultScreen"
+    );
+
+    screen.className =
+    "result-screen approved";
+
+    document.getElementById(
+      "resultContent"
+    ).innerHTML = `
+
+        <div class="big-status">
+        ✓ VERIFIED
+        </div>
+
+        <div class="info">
+        ${res.name}
+        </div>
+
+        <div class="info">
+        ${res.id}
+        </div>
+
+        <br>
+
+        <img
+        src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
+        style="
+            width:280px;
+            background:white;
+            padding:10px;
+            border-radius:12px;
+        ">
+
+        <br><br>
+
+        <button
+        onclick="continueScanning()">
+        CONTINUE
+        </button>
+
+    `;
+
+    screen.style.display =
+    "flex";
+
+}
 /*
 --------------------------------------------------
 LOAD AUTHORITIES
@@ -483,22 +537,6 @@ function showResult(res){
                 CONTINUE
             </button>
         
-            <br><br>
-        
-            <button
-                onclick="openManualVerification()"
-                style="
-                    padding:16px 40px;
-                    font-size:22px;
-                    border:none;
-                    border-radius:12px;
-                    background:#ffeb3b;
-                    color:black;
-                    font-weight:bold;
-                ">
-                MANUAL VERIFY
-            </button>
-        
         `;
 
     }
@@ -670,6 +708,10 @@ function submitManualVerification(){
         "manualPasscode"
     ).value.trim();
 
+    document.getElementById(
+      "busyOverlay"
+    ).style.display = "flex";
+
     fetch(
         API_URL +
         "?action=manualVerify" +
@@ -682,9 +724,104 @@ function submitManualVerification(){
     .then(r => r.json())
     .then(res => {
 
+        document.getElementById(
+          "busyOverlay"
+        ).style.display = "none";
+
         closeManualVerification();
 
-        showResult(res);
+        if(res.status === "APPROVED"){
+
+            const screen =
+            document.getElementById(
+              "resultScreen"
+            );
+
+            const content =
+            document.getElementById(
+              "resultContent"
+            );
+
+            screen.className =
+            "result-screen approved";
+
+            content.innerHTML = `
+
+                <div class="big-status">
+                ✓ VERIFIED
+                </div>
+
+                <div class="info">
+                Unique ID: ${res.id}
+                </div>
+
+                <div class="info">
+                Name: ${res.name}
+                </div>
+
+                <div class="info">
+                Facilitator: ${res.facilitator}
+                </div>
+
+                <div class="info">
+                Passcode: ${res.passcode}
+                </div>
+
+                <br>
+
+                <img
+                src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
+                style="
+                    width:280px;
+                    background:white;
+                    padding:10px;
+                    border-radius:12px;
+                ">
+
+                <br><br>
+
+                <div class="info">
+                Take Screenshot if QR needs re-printing
+                </div>
+
+                <br><br>
+
+                <button
+                onclick="continueScanning()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:white;
+                    color:black;
+                    font-weight:bold;
+                    cursor:pointer;
+                ">
+                CONTINUE
+                </button>
+
+            `;
+
+            screen.style.display =
+            "flex";
+
+        }else{
+
+            showResult(res);
+
+        }
+
+    })
+    .catch(err => {
+
+        document.getElementById(
+          "busyOverlay"
+        ).style.display = "none";
+
+        alert(
+          "Verification Error: " + err
+        );
 
     });
 
