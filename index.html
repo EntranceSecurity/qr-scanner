@@ -298,6 +298,68 @@ function hideBusy(){
     ).style.display = "none";
 
 }
+function showMultipleMatches(res){
+
+    const screen =
+    document.getElementById(
+      "resultScreen"
+    );
+
+    screen.className =
+    "result-screen approved";
+
+    let html = `
+        <div class="big-status">
+        MULTIPLE MATCHES
+        </div>
+
+        <div class="info">
+        Select the correct user
+        </div>
+
+        <br>
+    `;
+
+    res.matches.forEach(user => {
+
+        html += `
+            <button
+            style="
+                width:90%;
+                margin:10px;
+                padding:20px;
+                font-size:18px;
+                background:white;
+                color:black;
+                border-radius:12px;
+            "
+            onclick="showVerifiedUser({
+                id:${JSON.stringify(user.id)},
+                name:${JSON.stringify(user.name)}
+            })">
+                ${user.name}<br>
+                ${user.id}
+            </button>
+        `;
+
+    });
+
+    html += `
+        <br>
+        <button
+        onclick="continueScanning()">
+        CANCEL
+        </button>
+    `;
+
+    document.getElementById(
+      "resultContent"
+    ).innerHTML = html;
+
+    screen.style.display =
+    "flex";
+
+}
 function showVerifiedUser(res){
 
     const screen =
@@ -917,6 +979,12 @@ function continueScanning(){
 
     lastScan = "";
 
+    // Force scanner container visible
+
+    document.getElementById(
+      "scanner"
+    ).style.display = "block";
+
     setTimeout(() => {
 
         window.scrollTo(
@@ -1098,7 +1166,13 @@ function submitManualVerification(){
                 screen.style.display =
                 "flex";
     
-            }else{
+            }
+            else if(res.status === "MULTIPLE_MATCHES"){
+
+                showMultipleMatches(res);
+            
+            }
+            else{
     
                 showResult(res);
     
