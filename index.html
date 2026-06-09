@@ -514,7 +514,7 @@ LOGIN
 --------------------------------------------------
 */
 
-async function loginAndStart(){
+function loginAndStart(){
 
     const authority =
     document.getElementById(
@@ -577,7 +577,7 @@ async function loginAndStart(){
           res.status ===
           "AUTHORIZED"
         ){
-            await unlockAudio();
+            unlockAudio();
 
             currentAuthority =
             authority;
