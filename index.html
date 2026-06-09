@@ -92,6 +92,22 @@ button{
     display:none;
 }
 
+.input-wrapper{
+    position:relative;
+}
+
+.clear-btn{
+    display:none;
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:24px;
+    color:#999;
+    cursor:pointer;
+    user-select:none;
+}
+    
 @keyframes spin{
     0%{
         transform:rotate(0deg);
@@ -120,12 +136,24 @@ button{
     <option>Loading Authorities...</option>
 </select>
 
-<input
+
+<div class="input-wrapper">
+
+    <input
+    id="passcode"
     type="password"
     inputmode="numeric"
-    id="passcode"
-    placeholder="Authority Passcode">
+    placeholder="Age"
+    oninput="toggleClearButton('passcode')">
 
+    <span
+    id="passcodeClear"
+    class="clear-btn"
+    onclick="clearField('passcode')">
+    ×
+    </span>
+
+</div>
 <button
 id="loginBtn"
 onclick="loginAndStart()">
@@ -1027,6 +1055,9 @@ async function continueScanning(){
     isProcessing = false;
     lastScan = "";
     lastScanTime = 0;
+    document
+    .activeElement
+    ?.blur();
 
 }
 
@@ -1814,6 +1845,32 @@ function createUser(){
     });
 
 }
+
+function toggleClearButton(fieldId){
+
+    const field =
+    document.getElementById(fieldId);
+
+    const btn =
+    document.getElementById(fieldId + "Clear");
+
+    btn.style.display =
+        field.value.trim() ? "block" : "none";
+
+}
+
+function clearField(fieldId){
+
+    const field =
+    document.getElementById(fieldId);
+
+    field.value = "";
+
+    toggleClearButton(fieldId);
+
+    field.focus();
+
+}
     
 </script>
 
@@ -1834,17 +1891,41 @@ function createUser(){
 
     <h2>Manual Verification</h2>
 
-    <input
+    <div class="input-wrapper">
+
+        <input
         id="manualUniqueId"
-        type="search"
-        placeholder="Unique ID">
+        type="text"
+        placeholder="Unique ID"
+        oninput="toggleClearButton('manualUniqueId')">
+    
+        <span
+        id="manualUniqueIdClear"
+        class="clear-btn"
+        onclick="clearField('manualUniqueId')">
+        ×
+        </span>
+    
+    </div>
 
     <p>OR</p>
 
-    <input
+    <div class="input-wrapper">
+    
+        <input
         id="manualName"
-        type="search"
-        placeholder="Name">
+        type="text"
+        placeholder="Name"
+        oninput="toggleClearButton('manualName')">
+    
+        <span
+        id="manualNameClear"
+        class="clear-btn"
+        onclick="clearField('manualName')">
+        ×
+        </span>
+    
+    </div>
 
     <select
         id="manualFacilitator">
@@ -1853,10 +1934,22 @@ function createUser(){
         </option>
     </select>
 
-    <input
+    <div class="input-wrapper">
+
+        <input
         id="manualPasscode"
-        type="search"
-        placeholder="Passcode">
+        type="text"
+        placeholder="Passcode"
+        oninput="toggleClearButton('manualPasscode')">
+    
+        <span
+        id="manualPasscodeClear"
+        class="clear-btn"
+        onclick="clearField('manualPasscode')">
+        ×
+        </span>
+    
+    </div>
 
     <br>
 
@@ -1939,10 +2032,22 @@ padding:20px;
 border-radius:10px;
 ">
 
-<input
-id="newName"
-type="search"
-placeholder="Name">
+<div class="input-wrapper">
+
+    <input
+    id="newName"
+    type="text"
+    placeholder="Name"
+    oninput="toggleClearButton('newName')">
+
+    <span
+    id="newNameClear"
+    class="clear-btn"
+    onclick="clearField('newName')">
+    ×
+    </span>
+
+</div>
 
 <select id="newGender">
 
@@ -1960,11 +2065,23 @@ placeholder="Name">
 
 </select>
 
-<input
-type="number"
-inputmode="numeric"
-id="newAge"
-placeholder="Age">
+<div class="input-wrapper">
+
+    <input
+    id="newAge"
+    type="number"
+    inputmode="numeric"
+    placeholder="Age"
+    oninput="toggleClearButton('newAge')">
+
+    <span
+    id="newAgeClear"
+    class="clear-btn"
+    onclick="clearField('newAge')">
+    ×
+    </span>
+
+</div>
 
 <select id="newFacilitator">
     <option value="">
@@ -1972,10 +2089,22 @@ placeholder="Age">
     </option>
 </select>
     
-<input
-id="newPasscode"
-type="search"
-placeholder="Passcode">
+<div class="input-wrapper">
+
+    <input
+    id="newPasscode"
+    type="text"
+    placeholder="Passcode"
+    oninput="toggleClearButton('newPasscode')">
+
+    <span
+    id="newPasscodeClear"
+    class="clear-btn"
+    onclick="clearField('newPasscode')">
+    ×
+    </span>
+
+</div>
 
 <button
 id="generateIdBtn"
