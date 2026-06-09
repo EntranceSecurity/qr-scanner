@@ -693,7 +693,10 @@ SCAN
 */
 
 function onScanSuccess(decodedText){
-    
+    console.log(
+      "SCAN DETECTED",
+      decodedText
+    );
     if(isProcessing) return;
 
     const now = Date.now();
@@ -935,71 +938,22 @@ function showUserCreated(res){
     "flex";
 
 }
-function continueScanning(){
+async function continueScanning(){
 
     document.getElementById(
       "resultScreen"
     ).style.display = "none";
 
-    // Clear Manual Verification form
-
-    const manualUniqueId =
-      document.getElementById(
-        "manualUniqueId"
-      );
-
-    const manualName =
-      document.getElementById(
-        "manualName"
-      );
-
-    const manualFacilitator =
-      document.getElementById(
-        "manualFacilitator"
-      );
-
-    const manualPasscode =
-      document.getElementById(
-        "manualPasscode"
-      );
-
-    if(manualUniqueId){
-        manualUniqueId.value = "";
-    }
-
-    if(manualName){
-        manualName.value = "";
-    }
-
-    if(manualFacilitator){
-        manualFacilitator.selectedIndex = 0;
-    }
-
-    if(manualPasscode){
-        manualPasscode.value = "";
-    }
-
     isProcessing = false;
-
     lastScan = "";
+    lastScanTime = 0;
 
-    // Force scanner container visible
-
-    document.getElementById(
-      "scanner"
-    ).style.display = "block";
-
-    setTimeout(() => {
-
-        window.scrollTo(
-            0,
-            0
-        );
-
-    }, 100);
+    window.scrollTo(
+        0,
+        0
+    );
 
 }
-
 
 /*
 --------------------------------------------------
@@ -1499,6 +1453,44 @@ function closeHelpModal(){
       "helpModal"
     )
     .style.display = "none";
+
+}
+
+async function restartScanner(){
+
+    try{
+
+        if(html5QrCode){
+
+            try{
+                await html5QrCode.stop();
+            }catch(e){}
+
+            await html5QrCode.start(
+                {
+                    facingMode:"environment"
+                },
+                {
+                    fps:10,
+                    qrbox:250
+                },
+                onScanSuccess
+            );
+
+        }
+
+    }catch(err){
+
+        console.log(
+          "Restart scanner failed",
+          err
+        );
+
+    }
+
+    isProcessing = false;
+    lastScan = "";
+    lastScanTime = 0;
 
 }
 function createUser(){
