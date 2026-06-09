@@ -1,2283 +1,410 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>QR Entry Scanner</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976d2">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
-<style>
+<link rel="stylesheet" href="css/styles.css">
 
-body{
-    margin:0;
-    padding:0;
-    font-family:Arial, sans-serif;
-    background:#111;
-    color:white;
-    text-align:center;
-    min-height:100vh;
-}
-
-.container{
-    padding:20px;
-}
-
-select,input,button{
-    width:90%;
-    max-width:400px;
-    padding:14px;
-    margin:8px;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-}
-
-button{
-    background:#1976d2;
-    color:white;
-    font-weight:bold;
-}
-
-#scanner{
-    width:100%;
-    margin-top:15px;
-}
-
-.result-screen{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    z-index:9999;
-    padding:20px;
-    box-sizing:border-box;
-    overflow-y:auto; 
-}
-
-.approved{
-    background:#0f9d58;
-}
-
-.denied{
-    background:#d93025;
-}
-
-.created{
-    background:#1976d2;
-}
-    
-#loadingScreen{
-    background:#111;
-    display:none;
-    z-index:1000000;
-}
-    
-.big-status{
-    font-size:52px;
-    font-weight:bold;
-    margin-bottom:20px;
-}
-
-.info{
-    font-size:22px;
-    margin:5px;
-}
-
-.hidden{
-    display:none;
-}
-
-.input-wrapper{
-    position:relative;
-}
-
-.clear-btn{
-    display:none;
-    position:absolute;
-    right:15px;
-    top:50%;
-    transform:translateY(-50%);
-    font-size:24px;
-    color:#999;
-    cursor:pointer;
-    user-select:none;
-}
-    
-@keyframes spin{
-    0%{
-        transform:rotate(0deg);
-    }
-    100%{
-        transform:rotate(360deg);
-    }
-}
-</style>
-
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#1976d2">
-
-<link rel="apple-touch-icon" href="icon-192.png">
-    
 </head>
 
 <body>
 
 <div class="container">
 
+```
 <h2>QR Entry Scanner</h2>
 
 <select id="authority">
     <option>Loading Authorities...</option>
 </select>
 
-
 <div class="input-wrapper">
 
     <input
-    id="passcode"
-    type="password"
-    inputmode="numeric"
-    placeholder="Age"
-    oninput="toggleClearButton('passcode')">
+        id="passcode"
+        type="password"
+        inputmode="numeric"
+        placeholder="Passcode"
+        oninput="toggleClearButton('passcode')">
 
     <span
-    id="passcodeClear"
-    class="clear-btn"
-    onclick="clearField('passcode')">
-    ×
+        id="passcodeClear"
+        class="clear-btn"
+        onclick="clearField('passcode')">
+        ×
     </span>
 
 </div>
+
 <button
-id="loginBtn"
-onclick="loginAndStart()">
-LOGIN
+    id="loginBtn"
+    onclick="loginAndStart()">
+    LOGIN
 </button>
-    
+
 <div
-id="scanner"
-style="display:none;">
+    id="scanner"
+    style="display:none;">
 </div>
-    
+
 <br>
 
 <button
-id="manualVerifyBtn"
-onclick="openManualVerification()"
-style="display:none;">
-MANUAL VERIFY
-</button>
-    
-<button
-id="addUserMainBtn"
-onclick="openAddUserModal()"
-style="
-display:none;
-background:#4caf50;">
-ADD NEW USER
+    id="manualVerifyBtn"
+    onclick="openManualVerification()"
+    style="display:none;">
+    MANUAL VERIFY
 </button>
 
 <button
-id="helpBtn"
-onclick="openHelpModal()"
-style="
-display:none;
-background:#607d8b;">
-HELP
-</button>
-    
-</div>
-
-<div id="resultScreen" class="result-screen">
-    <div id="resultContent"></div>
-</div>
-<div id="loadingScreen" class="result-screen">
-
-    <div
+    id="addUserMainBtn"
+    onclick="openAddUserModal()"
     style="
-      width:70px;
-      height:70px;
-      border:8px solid #444;
-      border-top:8px solid white;
-      border-radius:50%;
-      animation:spin 1s linear infinite;
-    ">
-    </div>
+    display:none;
+    background:#4caf50;">
+    ADD NEW USER
+</button>
 
-    <br>
-
-    <div class="info">
-    Please wait...
-    </div>
+<button
+    id="helpBtn"
+    onclick="openHelpModal()"
+    style="
+    display:none;
+    background:#607d8b;">
+    HELP
+</button>
+```
 
 </div>
-    
-<script>
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbw_bogQZURolh4hprKCW6ojQgJzZhH3DGT9qHFysVRSh77FZWPM1y1R6gHdHfc0PWdFdw/exec";
-
-let html5QrCode = null;
-let currentAuthority = "";
-let isProcessing = false;
-let lastScan = "";
-let lastScanTime = 0;
-let audioCtx = null;
-let scannerWatchdog = null;
-    
-const USER_GUIDE_HTML = `
-<h2>User Guide</h2>
-
-<h3>Contents</h3>
-
-<ol>
-<li>Login</li>
-<li>QR Scan</li>
-<li>Manual Verification</li>
-<li>Add New User</li>
-<li>Troubleshooting</li>
-</ol>
-
-<hr>
-
-<h3>1. Login</h3>
-
-<ul>
-<li>Select Security Authority.</li>
-<li>Enter Passcode.</li>
-<li>Click LOGIN.</li>
-</ul>
-
-<h3>2. QR Scan</h3>
-
-<ul>
-<li>Point camera at QR code.</li>
-<li>Wait for vibration and verification.</li>
-<li>Green screen = Approved.</li>
-<li>Red screen = Denied.</li>
-<li>Press CONTINUE for next scan.</li>
-</ul>
-
-<h3>3. Manual Verification</h3>
-
-<ul>
-<li>Use when QR code is unavailable.</li>
-<li>Enter either Unique ID OR Name + Facilitator + Passcode.</li>
-<li>If verified, user details and QR code are displayed.</li>
-<li>Take screenshot if QR needs reprinting.</li>
-</ul>
-
-<h3>4. Add New User</h3>
-
-<ul>
-<li>Enter Name, Gender, Age, Facilitator and Passcode.</li>
-<li>Click GENERATE ID.</li>
-<li>Verify generated ID.</li>
-<li>Click CREATE USER.</li>
-<li>Take screenshot of generated QR code.</li>
-<li>Provide QR code to user for future entry.</li>
-</ul>
-
-<h3>5. Troubleshooting</h3>
-
-<ul>
-<li>If scanner does not respond, press CONTINUE and scan again.</li>
-<li>If login fails, verify Authority and Passcode.</li>
-<li>If Facilitator is unavailable, contact Superadmin.</li>
-<li>If network is unavailable, reconnect and retry.</li>
-</ul>
-
-<hr>
-
-<p>
-Version 1.0
-</p>
-`;
-    
-setInterval(() => {
-    fetch(
-        API_URL +
-        "?action=ping"
-    ).catch(()=>{});
-
-}, 300000);
-
-function showBusy(message){
-
-    document.getElementById(
-      "loadingScreen"
-    ).style.display = "flex";
-
-    document.querySelector(
-      "#loadingScreen .info"
-    ).innerText =
-    message || "Please wait...";
-
-}
-
-function hideBusy(){
-
-    document.getElementById(
-      "loadingScreen"
-    ).style.display = "none";
-
-}
-function showMultipleMatches(res){
-
-    window.multipleMatches = res.matches;
-
-    const screen =
-    document.getElementById(
-      "resultScreen"
-    );
-
-    screen.className =
-    "result-screen approved";
-
-    let html = `
-        <div class="big-status">
-        MULTIPLE MATCHES
-        </div>
-
-        <div class="info">
-        Select the correct user
-        </div>
-
-        <br>
-    `;
-
-    res.matches.forEach((user,index) => {
-
-        html += `
-            <button
-            style="
-                width:90%;
-                margin:10px;
-                padding:20px;
-                font-size:18px;
-                background:white;
-                color:black;
-                border-radius:12px;
-            "
-            onclick="selectMatchedUser(${index})">
-                <b>${user.name}</b><br>
-                ${user.id}
-            </button>
-        `;
-
-    });
-
-    html += `
-        <br>
-        <button
-        onclick="continueScanning()">
-        CANCEL
-        </button>
-    `;
-
-    document.getElementById(
-      "resultContent"
-    ).innerHTML = html;
-
-    screen.style.display =
-    "flex";
-
-}
-/*
---------------------------------------------------
-LOAD AUTHORITIES
---------------------------------------------------
-*/
-
-loadFacilitators();
-
-function loadFacilitators(){
-
-    fetch(
-      API_URL +
-      "?action=facilitators"
-    )
-    .then(r => r.json())
-    .then(data => {
-
-        const addUserDDL =
-        document.getElementById(
-          "newFacilitator"
-        );
-
-        const manualDDL =
-        document.getElementById(
-          "manualFacilitator"
-        );
-
-        if(addUserDDL){
-
-            addUserDDL.innerHTML =
-            '<option value="">Select Facilitator</option>';
-
-            data.facilitators.forEach(f => {
-
-                addUserDDL.innerHTML +=
-                `<option value="${f}">${f}</option>`;
-
-            });
-
-        }
-
-        if(manualDDL){
-
-            manualDDL.innerHTML =
-            '<option value="">Select Facilitator</option>';
-
-            data.facilitators.forEach(f => {
-
-                manualDDL.innerHTML +=
-                `<option value="${f}">${f}</option>`;
-
-            });
-
-        }
-
-    });
-
-}
-    
-loadAuthorities();
-
-function loadAuthorities(){
-
-    fetch(API_URL + "?action=authorities")
-    .then(r => r.json())
-    .then(data => {
-
-        const ddl =
-        document.getElementById("authority");
-
-        ddl.innerHTML =
-        '<option value="">Select Security Authority</option>';
-
-        data.authorities.forEach(a => {
-
-            ddl.innerHTML +=
-            `<option value="${a}">${a}</option>`;
-
-        });
-
-    });
-
-}
-    
-function selectMatchedUser(index){
-
-    const user =
-    window.multipleMatches[index];
-
-    showBusy(
-      "Confirming User..."
-    );
-
-    fetch(
-        API_URL +
-        "?action=confirmManualMatch" +
-        "&uniqueId=" +
-        encodeURIComponent(user.id) +
-        "&authority=" +
-        encodeURIComponent(currentAuthority)
-    )
-    .then(r => r.json())
-    .then(res => {
-
-        hideBusy();
-
-        showVerifiedUser(res);
-
-    })
-    .catch(err => {
-
-        hideBusy();
-
-        alert(
-          "Verification Error: " + err
-        );
-
-    });
-
-}
-/*
---------------------------------------------------
-LOGIN
---------------------------------------------------
-*/
-
-function loginAndStart(){
-
-    const authority =
-    document.getElementById(
-      "authority"
-    ).value;
-
-    const passcode =
-    document.getElementById(
-      "passcode"
-    ).value;
-
-    if(!authority){
-
-        alert(
-          "Select Security Authority"
-        );
-
-        return;
-    }
-
-    if(!passcode){
-
-        alert(
-          "Enter Passcode"
-        );
-
-        return;
-    }
-
-    showBusy(
-      "Authenticating..."
-    );
-
-    document
-    .getElementById(
-      "loginBtn"
-    )
-    .disabled = true;
-
-    fetch(
-        API_URL +
-        "?action=login" +
-        "&authority=" +
-        encodeURIComponent(authority) +
-        "&passcode=" +
-        encodeURIComponent(passcode)
-    )
-    .then(r => r.json())
-    .then(res => {
-
-        hideBusy();
-
-        document
-        .getElementById(
-          "loginBtn"
-        )
-        .disabled = false;
-
-        if(
-          res.status ===
-          "AUTHORIZED"
-        ){
-            unlockAudio();
-
-            currentAuthority =
-            authority;
-
-            // Hide login controls
-
-            document
-            .getElementById(
-              "authority"
-            )
-            .style.display =
-            "none";
-
-            document
-            .getElementById(
-              "passcode"
-            )
-            .style.display =
-            "none";
-
-            document
-            .getElementById(
-              "loginBtn"
-            )
-            .style.display =
-            "none";
-
-            // Show post-login buttons
-
-            document
-            .getElementById(
-              "manualVerifyBtn"
-            )
-            .style.display =
-            "inline-block";
-
-            document
-            .getElementById(
-              "addUserMainBtn"
-            )
-            .style.display =
-            "inline-block";
-
-            document
-            .getElementById(
-              "helpBtn"
-            )
-            .style.display =
-            "inline-block";
-
-            // Start scanner
-
-            startScanner();
-
-        }else{
-
-            alert(
-              "Invalid Authority Passcode"
-            );
-
-        }
-
-    })
-    .catch(err => {
-
-        hideBusy();
-
-        document
-        .getElementById(
-          "loginBtn"
-        )
-        .disabled = false;
-
-        alert(
-          "Login Error: " + err
-        );
-
-    });
-
-}
-
-/*
---------------------------------------------------
-START SCANNER
---------------------------------------------------
-*/
-
-async function startScanner(){
-
-    document.getElementById(
-      "scanner"
-    ).style.display = "block";
-
-    document.getElementById(
-      "authority"
-    ).disabled = true;
-
-    document.getElementById(
-      "passcode"
-    ).disabled = true;
-
-    html5QrCode =
-    new Html5Qrcode("scanner");
-
-    html5QrCode.start(
-
-        { facingMode: "environment" },
-
-        {
-            fps:10,
-            qrbox:250
-        },
-
-        onScanSuccess
-
-    );
-
-    if(scannerWatchdog){
-        clearInterval(scannerWatchdog);
-    }
-
-    setInterval(async ()=>{
-
-    try{
-
-        const video =
-        document.querySelector(
-          "#scanner video"
-        );
-
-        if(!video) return;
-
-        const t1 =
-        video.currentTime;
-
-        setTimeout(async ()=>{
-
-            if(!video) return;
-
-            const t2 =
-            video.currentTime;
-
-            if(
-                html5QrCode?.isScanning &&
-                t1 === t2
-            ){
-
-                console.log(
-                  "Frozen video detected"
-                );
-
-                try{
-
-                    await html5QrCode.stop();
-
-                    await html5QrCode.start(
-                        {
-                            facingMode:"environment"
-                        },
-                        {
-                            fps:10,
-                            qrbox:250
-                        },
-                        onScanSuccess
-                    );
-
-                }catch(err){
-
-                    console.log(err);
-
-                }
-
-            }
-
-        },3000);
-
-    }catch(err){
-
-        console.log(err);
-
-    }
-
-},30000);
-}
-
-/*
---------------------------------------------------
-SCAN
---------------------------------------------------
-*/
-
-function onScanSuccess(decodedText){
-    console.log(
-      "SCAN DETECTED",
-      decodedText
-    );
-    if(isProcessing) return;
-
-    const now = Date.now();
-
-    if(
-        decodedText === lastScan &&
-        (now - lastScanTime) < 3000
-    ){
-        return;
-    }
-
-    lastScan = decodedText;
-    lastScanTime = now;
-
-    isProcessing = true;
-    if(navigator.vibrate){
-        navigator.vibrate(50);
-    }
-    showBusy(
-      "Verifying QR Code..."
-    );
-    
-    const startTime = performance.now();
-    
-    fetch(
-        API_URL +
-        "?action=scan" +
-        "&id=" + encodeURIComponent(decodedText.trim()) +
-        "&authority=" + encodeURIComponent(currentAuthority)
-    )
-    .then(r => r.json())
-    .then(res => {
-    
-        console.log(
-            "API Time:",
-            Math.round(
-                performance.now() - startTime
-            ) + " ms"
-        );
-    
-        showResult(res);
-    
-    })
-    .catch(err => {
-    
-        alert("Scan Error: " + err);
-    
-        isProcessing = false;
-    
-    });
-
-}
-/*
---------------------------------------------------
-RESULT UI
---------------------------------------------------
-*/
-function getAudioContext(){
-
-    if(!audioCtx){
-
-        audioCtx =
-        new(
-            window.AudioContext ||
-            window.webkitAudioContext
-        )();
-
-    }
-
-    return audioCtx;
-
-}
-
-async function unlockAudio(){
-
-    const ctx = getAudioContext();
-
-    if(ctx.state === "suspended"){
-
-        try{
-            await ctx.resume();
-        }catch(e){
-            console.log(e);
-        }
-
-    }
-
-}
-    
-function showResult(res){
-    if(!res){
-        console.error("Empty response");
-        return;
-    }
-    
-    hideBusy();
-    const screen =
-    document.getElementById("resultScreen");
-
-    const content =
-    document.getElementById("resultContent");
-
-    if(
-       res.status === "APPROVED"
-    ){
-
-        playSuccess();
-
-        screen.className =
-        "result-screen approved";
-
-        content.innerHTML = `
-
-            <div class="big-status">
-            ✓ APPROVED
-            </div>
-
-            <div class="info">
-            Unique ID: ${res.id}
-            </div>
-
-            <div class="info">
-            Name: ${res.name}
-            </div>
-
-            <div class="info">
-            Facilitator: ${res.facilitator}
-            </div>
-
-            <div class="info">
-            Passcode: ${res.passcode}
-            </div>
-
-            <div class="info">
-            Authority: ${currentAuthority}
-            </div>
-
-            <br><br>
-
-            <button
-                onclick="continueScanning()"
-                style="
-                    padding:16px 40px;
-                    font-size:22px;
-                    border:none;
-                    border-radius:12px;
-                    background:white;
-                    color:black;
-                    font-weight:bold;
-                    cursor:pointer;
-                ">
-                CONTINUE
-            </button>
-
-        `;
-
-    }else{
-
-        playFailure();
-
-        screen.className =
-        "result-screen denied";
-
-        content.innerHTML = `
-
-            <div class="big-status">
-            ✖ DENIED
-            </div>
-        
-            <div class="info">
-            Unknown QR Code
-            </div>
-        
-            <div class="info">
-            ${res.id}
-            </div>
-        
-            <br><br>
-        
-            <button
-                onclick="continueScanning()"
-                style="
-                    padding:16px 40px;
-                    font-size:22px;
-                    border:none;
-                    border-radius:12px;
-                    background:white;
-                    color:black;
-                    font-weight:bold;
-                ">
-                CONTINUE
-            </button>
-        
-        `;
-
-    }
-
-    screen.style.display = "flex";
-
-}
-
-function showUserCreated(res){
-
-    const screen =
-    document.getElementById(
-      "resultScreen"
-    );
-
-    const content =
-    document.getElementById(
-      "resultContent"
-    );
-
-    screen.className =
-    "result-screen created";
-
-    content.innerHTML = `
-
-        <div class="big-status">
-        ✓ USER CREATED
-        </div>
-
-        <div class="info">
-        Unique ID
-        </div>
-
-        <div class="info"
-        style="
-            font-size:32px;
-            font-weight:bold;
-        ">
-        ${res.uniqueId}
-        </div>
-
-        <br>
-
-        <img
-        src="https://quickchart.io/qr?text=${encodeURIComponent(res.uniqueId)}&size=250"
-        style="
-            background:white;
-            padding:10px;
-            border-radius:12px;
-        ">
-
-        <br><br>
-
-        <div class="info">
-        Take screenshot and provide QR to user
-        </div>
-
-        <br><br>
-
-        <button
-        onclick="continueScanning()"
-        style="
-            padding:16px 40px;
-            font-size:22px;
-            border:none;
-            border-radius:12px;
-            background:white;
-            color:black;
-            font-weight:bold;
-        ">
-        CONTINUE
-        </button>
-
-    `;
-
-    screen.style.display =
-    "flex";
-
-}
-async function continueScanning(){
-
-    document.getElementById(
-      "resultScreen"
-    ).style.display = "none";
-
-    document.getElementById(
-      "resultContent"
-    ).innerHTML = "";
-
-    // Manual Verification
-
-    document.getElementById(
-      "manualUniqueId"
-    ).value = "";
-
-    document.getElementById(
-      "manualName"
-    ).value = "";
-
-    document.getElementById(
-      "manualFacilitator"
-    ).value = "";
-
-    document.getElementById(
-      "manualPasscode"
-    ).value = "";
-
-    // Add User
-
-    document.getElementById(
-      "newName"
-    ).value = "";
-
-    document.getElementById(
-      "newFacilitator"
-    ).value = "";
-
-    document.getElementById(
-      "newPasscode"
-    ).value = "";
-
-    if(document.getElementById("newGender")){
-        document.getElementById(
-          "newGender"
-        ).value = "";
-    }
-
-    if(document.getElementById("newAge")){
-        document.getElementById(
-          "newAge"
-        ).value = "";
-    }
-
-    if(document.getElementById("generatedId")){
-        document.getElementById(
-          "generatedId"
-        ).innerHTML = "";
-    }
-
-    suggestedUserId = "";
-
-    isProcessing = false;
-    lastScan = "";
-    lastScanTime = 0;
-
-    document.activeElement?.blur();
-
-    try{
-
-        await restartScanner();
-    
-    }catch(e){
-    
-        console.log(e);
-    
-    }
-
-}
-/*
---------------------------------------------------
-SUCCESS BEEP
---------------------------------------------------
-*/
-function playCreated(){
-
-    const ctx =
-    getAudioContext();
-
-    if(ctx.state === "suspended"){
-        ctx.resume();
-    }
-    
-    const notes =
-    [523,659,784];
-
-    notes.forEach((freq,index)=>{
-
-        const osc =
-        ctx.createOscillator();
-
-        const gain =
-        ctx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.value = freq;
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        gain.gain.setValueAtTime(
-            0.25,
-            ctx.currentTime + index * 0.12
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.01,
-            ctx.currentTime + index * 0.12 + 0.18
-        );
-
-        osc.start(
-            ctx.currentTime + index * 0.12
-        );
-
-        osc.stop(
-            ctx.currentTime + index * 0.12 + 0.18
-        );
-
-    });
-
-}
-    
-function playSuccess(){
-
-    const ctx = getAudioContext();
-
-    if(ctx.state === "suspended"){
-        ctx.resume();
-    }
-    
-    const osc =
-    ctx.createOscillator();
-
-    const gain =
-    ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.value = 900;
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    gain.gain.value = 0.3;
-
-    osc.start();
-
-    osc.stop(
-        ctx.currentTime + 0.15
-    );
-
-}
-
-function showVerifiedUser(user){
-
-    playSuccess();
-
-    const screen =
-    document.getElementById(
-      "resultScreen"
-    );
-
-    const content =
-    document.getElementById(
-      "resultContent"
-    );
-
-    screen.className =
-    "result-screen approved";
-
-    content.innerHTML = `
-
-        <div class="big-status">
-        ✓ VERIFIED
-        </div>
-
-        <div class="info">
-        Unique ID: ${user.id}
-        </div>
-
-        <div class="info">
-        Name: ${user.name}
-        </div>
-
-        <div class="info">
-        Facilitator: ${user.facilitator}
-        </div>
-
-        <div class="info">
-        Passcode: ${user.passcode}
-        </div>
-
-        <br>
-
-        <img
-        src="https://quickchart.io/qr?text=${encodeURIComponent(user.id)}&size=400"
-        style="
-            width:280px;
-            background:white;
-            padding:10px;
-            border-radius:12px;
-        ">
-
-        <br><br>
-
-        <div class="info">
-        Take Screenshot if QR needs re-printing
-        </div>
-
-        <br><br>
-
-        <button
-        onclick="continueScanning()"
-        style="
-            padding:16px 40px;
-            font-size:22px;
-            border:none;
-            border-radius:12px;
-            background:white;
-            color:black;
-            font-weight:bold;
-            cursor:pointer;
-        ">
-        CONTINUE
-        </button>
-
-    `;
-
-    screen.style.display =
-    "flex";
-
-}
-
-function openManualVerification(){
-
-    document.getElementById(
-        "manualUniqueId"
-    ).value = "";
-
-    document.getElementById(
-        "manualName"
-    ).value = "";
-
-    document.getElementById(
-        "manualFacilitator"
-    ).value = "";
-
-    document.getElementById(
-        "manualPasscode"
-    ).value = "";
-
-    document.getElementById(
-        "manualModal"
-    ).style.display = "block";
-
-}
-
-function closeManualVerification(){
-
-    document.getElementById(
-        "manualUniqueId"
-    ).value = "";
-
-    document.getElementById(
-        "manualName"
-    ).value = "";
-
-    document.getElementById(
-        "manualFacilitator"
-    ).value = "";
-
-    document.getElementById(
-        "manualPasscode"
-    ).value = "";
-
-    document.getElementById(
-        "manualModal"
-    ).style.display = "none";
-
-}
-    
-function submitManualVerification(){
-
-    const uniqueId =
-    document.getElementById(
-        "manualUniqueId"
-    ).value.trim();
-
-    const name =
-    document.getElementById(
-        "manualName"
-    ).value.trim();
-
-    const facilitator =
-    document.getElementById(
-        "manualFacilitator"
-    ).value.trim();
-
-    const passcode =
-    document.getElementById(
-        "manualPasscode"
-    ).value.trim();
-
-    closeManualVerification()
-    
-    showBusy(
-      "Verifying User..."
-    );
-
-    setTimeout(() => {
-        fetch(
-            API_URL +
-            "?action=manualVerify" +
-            "&uniqueId=" + encodeURIComponent(uniqueId) +
-            "&name=" + encodeURIComponent(name) +
-            "&facilitator=" + encodeURIComponent(facilitator) +
-            "&passcode=" + encodeURIComponent(passcode) +
-            "&authority=" + encodeURIComponent(currentAuthority)
-        )
-        .then(r => r.json())
-        .then(res => {
-    
-            hideBusy();
-    
-            closeManualVerification();
-    
-            if(res.status === "APPROVED"){
-
-                showVerifiedUser(res);
-            
-            }
-            else if(res.status === "MULTIPLE_MATCHES"){
-
-                showMultipleMatches(res);
-            
-            }
-            else{
-    
-                showResult(res);
-    
-            }
-    
-        })
-        .catch(err => {
-    
-            hideBusy();
-            alert(
-              "Verification Error: " + err
-            );
-    
-        });
-    }, 50);
-
-}
-/*
---------------------------------------------------
-FAILURE ALARM
---------------------------------------------------
-*/
-
-function playFailure(){
-
-    const ctx =
-    getAudioContext();
-    
-    if(ctx.state === "suspended"){
-        ctx.resume();
-    }
-
-    [0,0.25,0.5].forEach(offset => {
-
-        const osc =
-        ctx.createOscillator();
-
-        const gain =
-        ctx.createGain();
-
-        osc.type = "sawtooth";
-        osc.frequency.value = 750;
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        gain.gain.setValueAtTime(
-            0.4,
-            ctx.currentTime + offset
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.01,
-            ctx.currentTime + offset + 0.18
-        );
-
-        osc.start(
-            ctx.currentTime + offset
-        );
-
-        osc.stop(
-            ctx.currentTime + offset + 0.18
-        );
-
-    });
-
-}
-    
-let suggestedUserId = "";
-
-function openAddUserModal(){
-    if(html5QrCode?.isScanning){
-
-        html5QrCode.pause(true);
-    
-    }
-    suggestedUserId = "";
-
-    document.getElementById(
-      "generatedId"
-    ).innerHTML = "";
-
-    document.getElementById(
-      "newName"
-    ).value = "";
-
-    document.getElementById(
-      "newGender"
-    ).value = "";
-
-    document.getElementById(
-      "newAge"
-    ).value = "";
-
-    document.getElementById(
-      "newPasscode"
-    ).value = "";
-
-    document.getElementById(
-      "createUserBtn"
-    ).disabled = true;
-
-    document.getElementById(
-      "createUserBtn"
-    ).style.opacity = "0.5";
-
-    document.getElementById(
-      "addUserModal"
-    ).style.display = "block";
-
-}
-
-function closeAddUserModal(){
-
-    document.getElementById(
-      "newName"
-    ).value = "";
-
-    document.getElementById(
-      "newFacilitator"
-    ).value = "";
-
-    document.getElementById(
-      "newPasscode"
-    ).value = "";
-
-    if(
-      document.getElementById(
-        "newGender"
-      )
-    ){
-        document.getElementById(
-          "newGender"
-        ).value = "";
-    }
-
-    if(
-      document.getElementById(
-        "newAge"
-      )
-    ){
-        document.getElementById(
-          "newAge"
-        ).value = "";
-    }
-
-    document.getElementById(
-      "addUserModal"
-    ).style.display = "none";
-
-    try{
-
-        if(html5QrCode?.isScanning){
-
-            html5QrCode.resume();
-
-        }
-
-    }catch(e){
-
-        console.log(e);
-
-    }
-
-}
-
-    
-function generateUserId(){
-
-    const name =
-    document.getElementById(
-      "newName"
-    ).value.trim();
-
-    const facilitator =
-    document.getElementById(
-      "newFacilitator"
-    ).value.trim();
-
-    const gender =
-    document.getElementById(
-      "newGender"
-    ).value.trim();
-
-    const age =
-    document.getElementById(
-      "newAge"
-    ).value.trim();
-
-    const passcode =
-    document.getElementById(
-      "newPasscode"
-    ).value.trim();
-
-    if(
-      !name ||
-      !facilitator ||
-      !gender ||
-      !age ||
-      !passcode
-    ){
-
-        alert(
-          "Please complete all fields."
-        );
-
-        return;
-
-    }
-
-    document.getElementById(
-      "generateIdBtn"
-    ).disabled = true;
-
-    showBusy(
-      "Checking existing registrations..."
-    );
-
-    fetch(
-      API_URL +
-      "?action=checkDuplicateUser" +
-      "&name=" +
-      encodeURIComponent(name) +
-      "&facilitator=" +
-      encodeURIComponent(facilitator) +
-      "&passcode=" +
-      encodeURIComponent(passcode)
-    )
-    .then(r => r.json())
-    .then(dupRes => {
-
-        if(
-          dupRes.matches &&
-          dupRes.matches.length > 0
-        ){
-
-            let msg =
-            "Possible existing registrations found:\n\n";
-
-            dupRes.matches.forEach(m => {
-
-                msg +=
-                m.name +
-                " (" +
-                m.id +
-                ")\n";
-
-            });
-
-            msg +=
-            "\nContinue creating a new registration?";
-
-            hideBusy();
-
-            const proceed =
-            confirm(msg);
-
-            if(!proceed){
-
-                document.getElementById(
-                  "generateIdBtn"
-                ).disabled = false;
-
-                return;
-            }
-        }
-
-        showBusy(
-          "Generating User ID..."
-        );
-
-        fetch(
-          API_URL +
-          "?action=generateUserId" +
-          "&name=" +
-          encodeURIComponent(name) +
-          "&facilitator=" +
-          encodeURIComponent(facilitator)
-        )
-        .then(r => r.json())
-        .then(res => {
-
-            console.log(res);
-
-            hideBusy();
-
-            document.getElementById(
-              "generateIdBtn"
-            ).disabled = false;
-
-            if(!res.uniqueId){
-
-                alert(
-                  res.error ||
-                  "Unable to generate ID"
-                );
-
-                return;
-            }
-
-            suggestedUserId =
-            res.uniqueId;
-
-            document
-            .getElementById(
-              "generatedId"
-            )
-            .innerHTML = `
-                <h3>
-                Generated ID
-                </h3>
-
-                <div style="
-                    font-size:24px;
-                    font-weight:bold;
-                    color:#0f9d58;
-                ">
-                    ${res.uniqueId}
-                </div>
-            `;
-
-            document
-            .getElementById(
-              "createUserBtn"
-            )
-            .disabled = false;
-
-            document
-            .getElementById(
-              "createUserBtn"
-            )
-            .style.opacity = "1";
-
-        });
-
-    })
-    .catch(err => {
-
-        hideBusy();
-
-        document.getElementById(
-          "generateIdBtn"
-        ).disabled = false;
-
-        alert(
-          "Error: " + err
-        );
-
-    });
-
-}
-
-function openHelpModal(){
-
-    document
-    .getElementById(
-      "helpContent"
-    )
-    .innerHTML = USER_GUIDE_HTML;
-
-    document
-    .getElementById(
-      "helpModal"
-    )
-    .style.display = "block";
-
-}
-
-function closeHelpModal(){
-
-    document
-    .getElementById(
-      "helpModal"
-    )
-    .style.display = "none";
-
-}
-
-async function restartScanner(){
-
-    try{
-
-        if(html5QrCode){
-
-            try{
-                await html5QrCode.stop();
-            }catch(e){}
-
-            await html5QrCode.start(
-                {
-                    facingMode:"environment"
-                },
-                {
-                    fps:10,
-                    qrbox:250
-                },
-                onScanSuccess
-            );
-
-        }
-
-    }catch(err){
-
-        console.log(
-          "Restart scanner failed",
-          err
-        );
-
-    }
-
-    isProcessing = false;
-    lastScan = "";
-    lastScanTime = 0;
-
-}
-function createUser(){
-    const age =
-    parseInt(
-      document.getElementById(
-        "newAge"
-      ).value,
-      10
-    );
-
-    if(
-      isNaN(age) ||
-      age <= 5
-    ){
-
-        alert(
-          "Users aged 5 years or below need not be registered."
-        );
-
-        return;
-    }
-
-    document.getElementById(
-      "createUserBtn"
-    ).disabled = true;
-
-    showBusy(
-      "Creating User..."
-    );
-
-    fetch(
-      API_URL +
-      "?action=addUser" +
-      "&uniqueId=" +
-      encodeURIComponent(
-        suggestedUserId
-      ) +
-      "&name=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newName"
-        ).value
-      ) +
-      "&gender=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newGender"
-        ).value
-      ) +
-      "&age=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newAge"
-        ).value
-      ) +
-      "&facilitator=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newFacilitator"
-        ).value
-      ) +
-      "&passcode=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newPasscode"
-        ).value
-      )
-    )
-    .then(r => r.json())
-    .then(res => {
-        hideBusy();
-
-        document.getElementById(
-          "createUserBtn"
-        ).disabled = false;
-
-        if(res.status !== "CREATED"){
-
-            alert(
-              res.error ||
-              "User creation failed"
-            );
-
-            return;
-
-        }
-        playCreated();
-        
-        closeAddUserModal();
-        
-        const screen =
-        document.getElementById(
-          "resultScreen"
-        );
-
-        const content =
-        document.getElementById(
-          "resultContent"
-        );
-
-        screen.className =
-        "result-screen created";
-
-        content.innerHTML = `
-
-            <div class="big-status">
-            ✓ USER CREATED
-            </div>
-
-            <div class="info">
-            Unique ID
-            </div>
-
-            <div
-            style="
-              font-size:28px;
-              font-weight:bold;
-              margin-top:10px;
-            ">
-            ${res.uniqueId}
-            </div>
-
-            <br>
-
-            <img
-            src="https://quickchart.io/qr?text=${encodeURIComponent(res.uniqueId)}&size=400"
-            style="
-              width:280px;
-              background:white;
-              padding:10px;
-              border-radius:12px;
-            ">
-
-            <br><br>
-
-            <div class="info">
-            Take Screenshot and provide QR to user
-            </div>
-
-            <br><br>
-
-            <button
-            onclick="continueScanning()"
-            style="
-                padding:16px 40px;
-                font-size:22px;
-                border:none;
-                border-radius:12px;
-                background:white;
-                color:black;
-                font-weight:bold;
-                cursor:pointer;
-            ">
-            CONTINUE
-            </button>
-
-        `;
-
-        screen.style.display =
-        "flex";
-
-    })
-    .catch(err => {
-
-        hideBusy();
-
-        document.getElementById(
-          "createUserBtn"
-        ).disabled = false;
-
-        alert(
-          "Error: " + err
-        );
-
-    });
-
-}
-
-function toggleClearButton(fieldId){
-
-    const field =
-    document.getElementById(fieldId);
-
-    const btn =
-    document.getElementById(fieldId + "Clear");
-
-    btn.style.display =
-        field.value.trim() ? "block" : "none";
-
-}
-
-function clearField(fieldId){
-
-    const field =
-    document.getElementById(fieldId);
-
-    field.value = "";
-
-    toggleClearButton(fieldId);
-
-    field.focus();
-
-}
-    
-</script>
+<div
+    id="resultScreen"
+    class="result-screen">
+
+```
+<div id="resultContent"></div>
+```
+
+</div>
+
+<div
+    id="loadingScreen"
+    class="result-screen">
+
+```
+<div
+    style="
+    width:70px;
+    height:70px;
+    border:8px solid #444;
+    border-top:8px solid white;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    ">
+</div>
+
+<br>
+
+<div class="info">
+    Please wait...
+</div>
+```
+
+</div>
+
+<!-- MANUAL VERIFICATION -->
 
 <div
     id="manualModal"
     style="
-        display:none;
-        position:fixed;
-        top:0;
-        left:0;
-        width:100%;
-        height:100%;
-        background:#111;
-        z-index:10000;
-        padding-top:40px;
-        box-sizing:border-box;
-    ">
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:#111;
+    z-index:10000;
+    padding-top:40px;
+    box-sizing:border-box;">
 
-    <h2>Manual Verification</h2>
+```
+<h2>Manual Verification</h2>
 
-    <div class="input-wrapper">
+<div class="input-wrapper">
 
-        <input
+    <input
         id="manualUniqueId"
         type="text"
         placeholder="Unique ID"
         oninput="toggleClearButton('manualUniqueId')">
-    
-        <span
+
+    <span
         id="manualUniqueIdClear"
         class="clear-btn"
         onclick="clearField('manualUniqueId')">
         ×
-        </span>
-    
-    </div>
+    </span>
 
-    <p>OR</p>
+</div>
 
-    <div class="input-wrapper">
-    
-        <input
+<p>OR</p>
+
+<div class="input-wrapper">
+
+    <input
         id="manualName"
         type="text"
         placeholder="Name"
         oninput="toggleClearButton('manualName')">
-    
-        <span
+
+    <span
         id="manualNameClear"
         class="clear-btn"
         onclick="clearField('manualName')">
         ×
+    </span>
+
+</div>
+
+<select id="manualFacilitator">
+    <option value="">
+        Select Facilitator
+    </option>
+</select>
+
+<div class="input-wrapper">
+
+    <input
+        id="manualPasscode"
+        type="text"
+        placeholder="Passcode"
+        oninput="toggleClearButton('manualPasscode')">
+
+    <span
+        id="manualPasscodeClear"
+        class="clear-btn"
+        onclick="clearField('manualPasscode')">
+        ×
+    </span>
+
+</div>
+
+<br>
+
+<button onclick="submitManualVerification()">
+    VERIFY
+</button>
+
+<button onclick="closeManualVerification()">
+    CANCEL
+</button>
+```
+
+</div>
+
+<!-- HELP -->
+
+<div
+    id="helpModal"
+    style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:white;
+    color:black;
+    z-index:99999;
+    overflow-y:auto;
+    padding:20px;
+    box-sizing:border-box;
+    text-align:left;">
+
+```
+<div id="helpContent"></div>
+
+<br>
+
+<button
+    onclick="closeHelpModal()"
+    style="
+    background:#1976d2;
+    color:white;">
+    CLOSE
+</button>
+```
+
+</div>
+
+<!-- ADD USER -->
+
+<div
+    id="addUserModal"
+    style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.9);
+    z-index:99999;
+    overflow:auto;
+    padding-top:40px;">
+
+```
+<div
+    style="
+    max-width:500px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;">
+
+    <div class="input-wrapper">
+
+        <input
+            id="newName"
+            type="text"
+            placeholder="Name"
+            oninput="toggleClearButton('newName')">
+
+        <span
+            id="newNameClear"
+            class="clear-btn"
+            onclick="clearField('newName')">
+            ×
         </span>
-    
+
     </div>
 
-    <select
-        id="manualFacilitator">
+    <select id="newGender">
+
         <option value="">
-        Select Facilitator
+            Select Gender
+        </option>
+
+        <option value="M">
+            Male
+        </option>
+
+        <option value="F">
+            Female
+        </option>
+
+    </select>
+
+    <div class="input-wrapper">
+
+        <input
+            id="newAge"
+            type="number"
+            inputmode="numeric"
+            placeholder="Age"
+            oninput="toggleClearButton('newAge')">
+
+        <span
+            id="newAgeClear"
+            class="clear-btn"
+            onclick="clearField('newAge')">
+            ×
+        </span>
+
+    </div>
+
+    <select id="newFacilitator">
+        <option value="">
+            Loading Facilitators...
         </option>
     </select>
 
     <div class="input-wrapper">
 
         <input
-        id="manualPasscode"
-        type="text"
-        placeholder="Passcode"
-        oninput="toggleClearButton('manualPasscode')">
-    
+            id="newPasscode"
+            type="text"
+            placeholder="Passcode"
+            oninput="toggleClearButton('newPasscode')">
+
         <span
-        id="manualPasscodeClear"
-        class="clear-btn"
-        onclick="clearField('manualPasscode')">
-        ×
+            id="newPasscodeClear"
+            class="clear-btn"
+            onclick="clearField('newPasscode')">
+            ×
         </span>
-    
+
     </div>
 
-    <br>
-
-    <button onclick="submitManualVerification()">
-        VERIFY
+    <button
+        id="generateIdBtn"
+        onclick="generateUserId()">
+        GENERATE ID
     </button>
 
-    <button onclick="closeManualVerification()">
+    <div
+        id="generatedId"
+        style="
+        font-size:24px;
+        font-weight:bold;
+        margin-top:15px;">
+    </div>
+
+    <button
+        id="createUserBtn"
+        onclick="createUser()"
+        disabled
+        style="
+        opacity:0.5;">
+        CREATE USER
+    </button>
+
+    <button
+        onclick="closeAddUserModal()">
         CANCEL
     </button>
 
 </div>
-
-<script>
-
-if ('serviceWorker' in navigator) {
-
-  navigator.serviceWorker
-    .register('./sw.js')
-    .then(() => console.log('PWA Ready'));
-
-}
-
-</script>
-
-<div
-id="helpModal"
-style="
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-color:black;
-z-index:99999;
-overflow-y:auto;
-padding:20px;
-box-sizing:border-box;
-text-align:left;
-">
-
-<div id="helpContent"></div>
-
-<br>
-
-<button
-onclick="closeHelpModal()"
-style="
-background:#1976d2;
-color:white;
-">
-CLOSE
-</button>
-
-</div>
-    
-<div
-id="addUserModal"
-style="
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.9);
-z-index:99999;
-overflow:auto;
-padding-top:40px;
-">
-
-<div
-style="
-max-width:500px;
-margin:auto;
-background:white;
-padding:20px;
-border-radius:10px;
-">
-
-<div class="input-wrapper">
-
-    <input
-    id="newName"
-    type="text"
-    placeholder="Name"
-    oninput="toggleClearButton('newName')">
-
-    <span
-    id="newNameClear"
-    class="clear-btn"
-    onclick="clearField('newName')">
-    ×
-    </span>
+```
 
 </div>
 
-<select id="newGender">
+<!-- JAVASCRIPT -->
 
-    <option value="">
-    Select Gender
-    </option>
+<script src="js/state.js"></script>
 
-    <option value="M">
-    Male
-    </option>
+<script src="js/api.js"></script>
 
-    <option value="F">
-    Female
-    </option>
+<script src="js/utils.js"></script>
 
-</select>
+<script src="js/audio.js"></script>
 
-<div class="input-wrapper">
+<script src="js/ui.js"></script>
 
-    <input
-    id="newAge"
-    type="number"
-    inputmode="numeric"
-    placeholder="Age"
-    oninput="toggleClearButton('newAge')">
+<script src="js/help.js"></script>
 
-    <span
-    id="newAgeClear"
-    class="clear-btn"
-    onclick="clearField('newAge')">
-    ×
-    </span>
+<script src="js/scanner.js"></script>
 
-</div>
+<script src="js/auth.js"></script>
 
-<select id="newFacilitator">
-    <option value="">
-        Loading Facilitators...
-    </option>
-</select>
-    
-<div class="input-wrapper">
+<script src="js/manualVerify.js"></script>
 
-    <input
-    id="newPasscode"
-    type="text"
-    placeholder="Passcode"
-    oninput="toggleClearButton('newPasscode')">
+<script src="js/addUser.js"></script>
 
-    <span
-    id="newPasscodeClear"
-    class="clear-btn"
-    onclick="clearField('newPasscode')">
-    ×
-    </span>
+<script src="js/app.js"></script>
 
-</div>
-
-<button
-id="generateIdBtn"
-onclick="generateUserId()">
-GENERATE ID
-</button>
-
-<div
-id="generatedId"
-style="
-font-size:24px;
-font-weight:bold;
-margin-top:15px;
-">
-</div>
-
-<button
-id="createUserBtn"
-onclick="createUser()"
-disabled
-style="
-opacity:0.5;
-">
-CREATE USER
-</button>
-
-<button
-onclick="closeAddUserModal()">
-CANCEL
-</button>
-
-</div>
-
-</div>    
-    
 </body>
 </html>
+
