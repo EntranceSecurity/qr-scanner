@@ -875,6 +875,44 @@ function continueScanning(){
       "resultScreen"
     ).style.display = "none";
 
+    // Clear Manual Verification form
+
+    const manualUniqueId =
+      document.getElementById(
+        "manualUniqueId"
+      );
+
+    const manualName =
+      document.getElementById(
+        "manualName"
+      );
+
+    const manualFacilitator =
+      document.getElementById(
+        "manualFacilitator"
+      );
+
+    const manualPasscode =
+      document.getElementById(
+        "manualPasscode"
+      );
+
+    if(manualUniqueId){
+        manualUniqueId.value = "";
+    }
+
+    if(manualName){
+        manualName.value = "";
+    }
+
+    if(manualFacilitator){
+        manualFacilitator.selectedIndex = 0;
+    }
+
+    if(manualPasscode){
+        manualPasscode.value = "";
+    }
+
     isProcessing = false;
 
     lastScan = "";
@@ -1223,71 +1261,125 @@ function generateUserId(){
     ).disabled = true;
 
     showBusy(
-      "Generating User ID..."
+      "Checking existing registrations..."
     );
-    
+
     fetch(
       API_URL +
-      "?action=generateUserId" +
+      "?action=checkDuplicateUser" +
       "&name=" +
       encodeURIComponent(name) +
       "&facilitator=" +
-      encodeURIComponent(facilitator)
+      encodeURIComponent(facilitator) +
+      "&passcode=" +
+      encodeURIComponent(passcode)
     )
     .then(r => r.json())
-    .then(res => {
+    .then(dupRes => {
 
-        console.log(res);
+        if(
+          dupRes.matches &&
+          dupRes.matches.length > 0
+        ){
 
-        hideBusy();
+            let msg =
+            "Possible existing registrations found:\n\n";
 
-        document.getElementById(
-          "generateIdBtn"
-        ).disabled = false;
+            dupRes.matches.forEach(m => {
 
-        if(!res.uniqueId){
+                msg +=
+                m.name +
+                " (" +
+                m.id +
+                ")\n";
 
-            alert(
-              res.error ||
-              "Unable to generate ID"
-            );
+            });
 
-            return;
+            msg +=
+            "\nContinue creating a new registration?";
 
+            hideBusy();
+
+            const proceed =
+            confirm(msg);
+
+            if(!proceed){
+
+                document.getElementById(
+                  "generateIdBtn"
+                ).disabled = false;
+
+                return;
+            }
         }
 
-        suggestedUserId =
-        res.uniqueId;
+        showBusy(
+          "Generating User ID..."
+        );
 
-        document
-        .getElementById(
-          "generatedId"
+        fetch(
+          API_URL +
+          "?action=generateUserId" +
+          "&name=" +
+          encodeURIComponent(name) +
+          "&facilitator=" +
+          encodeURIComponent(facilitator)
         )
-        .innerHTML = `
-            <h3>
-            Generated ID
-            </h3>
+        .then(r => r.json())
+        .then(res => {
 
-            <div style="
-                font-size:24px;
-                font-weight:bold;
-                color:#0f9d58;
-            ">
-                ${res.uniqueId}
-            </div>
-        `;
+            console.log(res);
 
-        document
-        .getElementById(
-          "createUserBtn"
-        )
-        .disabled = false;
+            hideBusy();
 
-        document
-        .getElementById(
-          "createUserBtn"
-        )
-        .style.opacity = "1";
+            document.getElementById(
+              "generateIdBtn"
+            ).disabled = false;
+
+            if(!res.uniqueId){
+
+                alert(
+                  res.error ||
+                  "Unable to generate ID"
+                );
+
+                return;
+            }
+
+            suggestedUserId =
+            res.uniqueId;
+
+            document
+            .getElementById(
+              "generatedId"
+            )
+            .innerHTML = `
+                <h3>
+                Generated ID
+                </h3>
+
+                <div style="
+                    font-size:24px;
+                    font-weight:bold;
+                    color:#0f9d58;
+                ">
+                    ${res.uniqueId}
+                </div>
+            `;
+
+            document
+            .getElementById(
+              "createUserBtn"
+            )
+            .disabled = false;
+
+            document
+            .getElementById(
+              "createUserBtn"
+            )
+            .style.opacity = "1";
+
+        });
 
     })
     .catch(err => {
