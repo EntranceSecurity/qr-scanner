@@ -359,28 +359,49 @@ loadFacilitators();
 function loadFacilitators(){
 
     fetch(
-        API_URL +
-        "?action=facilitators"
+      API_URL +
+      "?action=facilitators"
     )
     .then(r => r.json())
     .then(data => {
 
-        const ddl =
+        const addUserDDL =
         document.getElementById(
-            "newFacilitator"
+          "newFacilitator"
         );
 
-        ddl.innerHTML =
-        '<option value="">Select Facilitator</option>';
+        const manualDDL =
+        document.getElementById(
+          "manualFacilitator"
+        );
 
-        data.facilitators.forEach(f => {
+        if(addUserDDL){
 
-            ddl.innerHTML +=
-            `<option value="${f}">
-                ${f}
-            </option>`;
+            addUserDDL.innerHTML =
+            '<option value="">Select Facilitator</option>';
 
-        });
+            data.facilitators.forEach(f => {
+
+                addUserDDL.innerHTML +=
+                `<option value="${f}">${f}</option>`;
+
+            });
+
+        }
+
+        if(manualDDL){
+
+            manualDDL.innerHTML =
+            '<option value="">Select Facilitator</option>';
+
+            data.facilitators.forEach(f => {
+
+                manualDDL.innerHTML +=
+                `<option value="${f}">${f}</option>`;
+
+            });
+
+        }
 
     });
 
