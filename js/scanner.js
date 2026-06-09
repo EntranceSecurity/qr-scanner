@@ -18,10 +18,10 @@ async function startScanner(){
       "passcode"
     ).disabled = true;
 
-    html5QrCode =
+    AppState.html5QrCode =
     new Html5Qrcode("scanner");
 
-    html5QrCode.start(
+    AppState.html5QrCode.start(
 
         { facingMode: "environment" },
 
@@ -34,72 +34,70 @@ async function startScanner(){
 
     );
 
-    if(scannerWatchdog){
-        clearInterval(scannerWatchdog);
+    if(AppState.scannerWatchdog){
+        clearInterval(AppState.scannerWatchdog);
     }
 
-    setInterval(async ()=>{
-
-    try{
-
-        const video =
-        document.querySelector(
-          "#scanner video"
-        );
-
-        if(!video) return;
-
-        const t1 =
-        video.currentTime;
-
-        setTimeout(async ()=>{
+    AppState.scannerWatchdog = setInterval(async ()=>{
+        try{
+            const video =
+            document.querySelector(
+            "#scanner video"
+            );
 
             if(!video) return;
 
-            const t2 =
+            const t1 =
             video.currentTime;
 
-            if(
-                html5QrCode?.isScanning &&
-                t1 === t2
-            ){
+            setTimeout(async ()=>{
 
-                console.log(
-                  "Frozen video detected"
-                );
+                if(!video) return;
 
-                try{
+                const t2 =
+                video.currentTime;
 
-                    await html5QrCode.stop();
+                if(
+                    AppState.html5QrCode?.isScanning &&
+                    t1 === t2
+                ){
 
-                    await html5QrCode.start(
-                        {
-                            facingMode:"environment"
-                        },
-                        {
-                            fps:10,
-                            qrbox:250
-                        },
-                        onScanSuccess
+                    console.log(
+                    "Frozen video detected"
                     );
 
-                }catch(err){
+                    try{
 
-                    console.log(err);
+                        await AppState.html5QrCode.stop();
+
+                        await AppState.html5QrCode.start(
+                            {
+                                facingMode:"environment"
+                            },
+                            {
+                                fps:10,
+                                qrbox:250
+                            },
+                            onScanSuccess
+                        );
+
+                    }catch(err){
+
+                        console.log(err);
+
+                    }
 
                 }
 
-            }
+            },3000);
 
-        },3000);
+        }catch(err){
 
-    }catch(err){
+            console.log(err);
 
-        console.log(err);
+        }
 
-    }
-
-},30000);
+    },30000);
 }
 
 
@@ -107,13 +105,13 @@ async function restartScanner(){
 
     try{
 
-        if(html5QrCode){
+        if(AppState.html5QrCode){
 
             try{
-                await html5QrCode.stop();
+                await AppState.html5QrCode.stop();
             }catch(e){}
 
-            await html5QrCode.start(
+            await AppState.html5QrCode.start(
                 {
                     facingMode:"environment"
                 },
@@ -135,9 +133,9 @@ async function restartScanner(){
 
     }
 
-    isProcessing = false;
-    lastScan = "";
-    lastScanTime = 0;
+    AppState.isProcessing = false;
+    AppState.lastScan = "";
+    AppState.lastScanTime = 0;
 
 }
 
@@ -201,11 +199,11 @@ async function continueScanning(){
         ).innerHTML = "";
     }
 
-    suggestedUserId = "";
+    AppState.suggestedUserId = "";
 
-    isProcessing = false;
-    lastScan = "";
-    lastScanTime = 0;
+    AppState.isProcessing = false;
+    AppState.lastScan = "";
+    AppState.lastScanTime = 0;
 
     document.activeElement?.blur();
 
@@ -221,3 +219,74 @@ async function continueScanning(){
 
 }
 
+function onScanSuccess(decodedText){
+
+    console.log(
+      "SCAN DETECTED",
+      decodedText
+    );
+
+    if(AppState.isProcessing) return;
+
+    const now = Date.now();
+
+    if(
+        decodedText.trim() === AppState.lastScan &&
+        (now - AppState.lastScanTime) < 3000
+    ){
+        return;
+    }
+
+    AppState.lastScan = decodedText.trim();
+    AppState.lastScanTime = now;
+
+    AppState.isProcessing = true;
+
+    if(navigator.vibrate){
+        navigator.vibrate(50);
+    }
+
+    showBusy(
+      "Verifying QR Code..."
+    );
+
+    const startTime =
+    performance.now();
+
+    api(
+        "scan",
+        {
+            id:
+            decodedText.trim(),
+
+            authority:
+            AppState.currentAuthority
+        }
+    )
+    .then(res => {
+
+        console.log(
+            "API Time:",
+            Math.round(
+                performance.now() -
+                startTime
+            ) + " ms"
+        );
+
+        showResult(res);
+
+    })
+    .catch(err => {
+
+        hideBusy();
+
+        alert(
+          "Scan Error: " +
+          err
+        );
+
+        AppState.isProcessing = false;
+
+    });
+
+}

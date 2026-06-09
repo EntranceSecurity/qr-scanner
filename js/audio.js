@@ -150,9 +150,9 @@ async function unlockAudio(){
 
 function getAudioContext(){
 
-    if(!audioCtx){
+    if(!AppState.audioCtx){
 
-        audioCtx =
+        AppState.audioCtx =
         new(
             window.AudioContext ||
             window.webkitAudioContext
@@ -160,6 +160,6 @@ function getAudioContext(){
 
     }
 
-    return audioCtx;
+    return AppState.audioCtx;
 
 }

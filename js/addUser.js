@@ -1,92 +1,86 @@
-function openAddUserModal(){
-    if(html5QrCode?.isScanning){
+function getAddUserData() {
 
-        html5QrCode.pause(true);
-    
+    return {
+
+        name:
+            document.getElementById("newName")
+            .value.trim(),
+
+        gender:
+            document.getElementById("newGender")
+            .value.trim(),
+
+        age:
+            document.getElementById("newAge")
+            .value.trim(),
+
+        facilitator:
+            document.getElementById("newFacilitator")
+            .value.trim(),
+
+        passcode:
+            document.getElementById("newPasscode")
+            .value.trim()
+
+    };
+
+}
+
+function resetAddUserForm() {
+
+    document.getElementById("newName").value = "";
+    document.getElementById("newGender").value = "";
+    document.getElementById("newAge").value = "";
+    document.getElementById("newFacilitator").value = "";
+    document.getElementById("newPasscode").value = "";
+
+    document.getElementById("generatedId").innerHTML = "";
+
+    document.getElementById("createUserBtn").disabled = true;
+    document.getElementById("createUserBtn").style.opacity = "0.5";
+
+    AppState.suggestedUserId = "";
+
+}
+
+function openAddUserModal() {
+
+    try {
+
+        if (AppState.html5QrCode?.isScanning) {
+
+            AppState.html5QrCode.pause(true);
+
+        }
+
+    } catch (e) {
+
+        console.log(e);
+
     }
-    suggestedUserId = "";
+
+    resetAddUserForm();
 
     document.getElementById(
-      "generatedId"
-    ).innerHTML = "";
-
-    document.getElementById(
-      "newName"
-    ).value = "";
-
-    document.getElementById(
-      "newGender"
-    ).value = "";
-
-    document.getElementById(
-      "newAge"
-    ).value = "";
-
-    document.getElementById(
-      "newPasscode"
-    ).value = "";
-
-    document.getElementById(
-      "createUserBtn"
-    ).disabled = true;
-
-    document.getElementById(
-      "createUserBtn"
-    ).style.opacity = "0.5";
-
-    document.getElementById(
-      "addUserModal"
+        "addUserModal"
     ).style.display = "block";
 
 }
 
-function closeAddUserModal(){
+
+async function closeAddUserModal() {
+
+    resetAddUserForm();
 
     document.getElementById(
-      "newName"
-    ).value = "";
-
-    document.getElementById(
-      "newFacilitator"
-    ).value = "";
-
-    document.getElementById(
-      "newPasscode"
-    ).value = "";
-
-    if(
-      document.getElementById(
-        "newGender"
-      )
-    ){
-        document.getElementById(
-          "newGender"
-        ).value = "";
-    }
-
-    if(
-      document.getElementById(
-        "newAge"
-      )
-    ){
-        document.getElementById(
-          "newAge"
-        ).value = "";
-    }
-
-    document.getElementById(
-      "addUserModal"
+        "addUserModal"
     ).style.display = "none";
 
-    try{
+    try {
 
-        if(html5QrCode?.isScanning){
+        await restartScanner();
 
-            html5QrCode.resume();
-
-        }
-
-    }catch(e){
+    } catch (e) {
 
         console.log(e);
 
@@ -95,366 +89,245 @@ function closeAddUserModal(){
 }
 
     
-function generateUserId(){
+async function generateUserId() {
 
-    const name =
-    document.getElementById(
-      "newName"
-    ).value.trim();
+    const user = getAddUserData();
 
-    const facilitator =
-    document.getElementById(
-      "newFacilitator"
-    ).value.trim();
-
-    const gender =
-    document.getElementById(
-      "newGender"
-    ).value.trim();
-
-    const age =
-    document.getElementById(
-      "newAge"
-    ).value.trim();
-
-    const passcode =
-    document.getElementById(
-      "newPasscode"
-    ).value.trim();
-
-    if(
-      !name ||
-      !facilitator ||
-      !gender ||
-      !age ||
-      !passcode
-    ){
+    if (
+        !user.name ||
+        !user.facilitator ||
+        !user.gender ||
+        !user.age ||
+        !user.passcode
+    ) {
 
         alert(
-          "Please complete all fields."
+            "Please complete all fields."
         );
 
         return;
 
     }
 
-    document.getElementById(
-      "generateIdBtn"
-    ).disabled = true;
+    const btn =
+        document.getElementById(
+            "generateIdBtn"
+        );
 
-    showBusy(
-      "Checking existing registrations..."
-    );
+    btn.disabled = true;
 
-    fetch(
-      API_URL +
-      "?action=checkDuplicateUser" +
-      "&name=" +
-      encodeURIComponent(name) +
-      "&facilitator=" +
-      encodeURIComponent(facilitator) +
-      "&passcode=" +
-      encodeURIComponent(passcode)
-    )
-    .then(r => r.json())
-    .then(dupRes => {
+    try {
 
-        if(
-          dupRes.matches &&
-          dupRes.matches.length > 0
-        ){
+        showBusy(
+            "Checking existing registrations..."
+        );
+
+        const dupRes =
+            await api(
+                "checkDuplicateUser",
+                {
+                    name: user.name,
+                    facilitator:
+                        user.facilitator,
+                    passcode:
+                        user.passcode
+                }
+            );
+
+        if (
+            dupRes.matches &&
+            dupRes.matches.length
+        ) {
 
             let msg =
-            "Possible existing registrations found:\n\n";
+                "Possible existing registrations found:\n\n";
 
             dupRes.matches.forEach(m => {
 
                 msg +=
-                m.name +
-                " (" +
-                m.id +
-                ")\n";
+                    `${m.name} (${m.id})\n`;
 
             });
 
             msg +=
-            "\nContinue creating a new registration?";
+                "\nContinue creating a new registration?";
 
             hideBusy();
 
-            const proceed =
-            confirm(msg);
+            if (!confirm(msg)) {
 
-            if(!proceed){
-
-                document.getElementById(
-                  "generateIdBtn"
-                ).disabled = false;
-
+                btn.disabled = false;
                 return;
+
             }
+
         }
 
         showBusy(
-          "Generating User ID..."
+            "Generating User ID..."
         );
 
-        fetch(
-          API_URL +
-          "?action=generateUserId" +
-          "&name=" +
-          encodeURIComponent(name) +
-          "&facilitator=" +
-          encodeURIComponent(facilitator)
-        )
-        .then(r => r.json())
-        .then(res => {
-
-            console.log(res);
-
-            hideBusy();
-
-            document.getElementById(
-              "generateIdBtn"
-            ).disabled = false;
-
-            if(!res.uniqueId){
-
-                alert(
-                  res.error ||
-                  "Unable to generate ID"
-                );
-
-                return;
-            }
-
-            suggestedUserId =
-            res.uniqueId;
-
-            document
-            .getElementById(
-              "generatedId"
-            )
-            .innerHTML = `
-                <h3>
-                Generated ID
-                </h3>
-
-                <div style="
-                    font-size:24px;
-                    font-weight:bold;
-                    color:#0f9d58;
-                ">
-                    ${res.uniqueId}
-                </div>
-            `;
-
-            document
-            .getElementById(
-              "createUserBtn"
-            )
-            .disabled = false;
-
-            document
-            .getElementById(
-              "createUserBtn"
-            )
-            .style.opacity = "1";
-
-        });
-
-    })
-    .catch(err => {
+        const res =
+            await api(
+                "generateUserId",
+                {
+                    name: user.name,
+                    facilitator:
+                        user.facilitator
+                }
+            );
 
         hideBusy();
 
-        document.getElementById(
-          "generateIdBtn"
-        ).disabled = false;
+        btn.disabled = false;
 
-        alert(
-          "Error: " + err
-        );
-
-    });
-
-}
-
-function createUser(){
-    const age =
-    parseInt(
-      document.getElementById(
-        "newAge"
-      ).value,
-      10
-    );
-
-    if(
-      isNaN(age) ||
-      age <= 5
-    ){
-
-        alert(
-          "Users aged 5 years or below need not be registered."
-        );
-
-        return;
-    }
-
-    document.getElementById(
-      "createUserBtn"
-    ).disabled = true;
-
-    showBusy(
-      "Creating User..."
-    );
-
-    fetch(
-      API_URL +
-      "?action=addUser" +
-      "&uniqueId=" +
-      encodeURIComponent(
-        suggestedUserId
-      ) +
-      "&name=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newName"
-        ).value
-      ) +
-      "&gender=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newGender"
-        ).value
-      ) +
-      "&age=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newAge"
-        ).value
-      ) +
-      "&facilitator=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newFacilitator"
-        ).value
-      ) +
-      "&passcode=" +
-      encodeURIComponent(
-        document.getElementById(
-          "newPasscode"
-        ).value
-      )
-    )
-    .then(r => r.json())
-    .then(res => {
-        hideBusy();
-
-        document.getElementById(
-          "createUserBtn"
-        ).disabled = false;
-
-        if(res.status !== "CREATED"){
+        if (!res.uniqueId) {
 
             alert(
-              res.error ||
-              "User creation failed"
+                res.error ||
+                "Unable to generate ID"
             );
 
             return;
 
         }
-        playCreated();
-        
-        closeAddUserModal();
-        
-        const screen =
+
+        AppState.suggestedUserId =
+            res.uniqueId;
+
         document.getElementById(
-          "resultScreen"
-        );
-
-        const content =
-        document.getElementById(
-          "resultContent"
-        );
-
-        screen.className =
-        "result-screen created";
-
-        content.innerHTML = `
-
-            <div class="big-status">
-            ✓ USER CREATED
-            </div>
-
-            <div class="info">
-            Unique ID
-            </div>
-
+            "generatedId"
+        ).innerHTML = `
+            <h3>Generated ID</h3>
             <div
             style="
-              font-size:28px;
-              font-weight:bold;
-              margin-top:10px;
+                font-size:24px;
+                font-weight:bold;
+                color:#0f9d58;
             ">
             ${res.uniqueId}
             </div>
-
-            <br>
-
-            <img
-            src="https://quickchart.io/qr?text=${encodeURIComponent(res.uniqueId)}&size=400"
-            style="
-              width:280px;
-              background:white;
-              padding:10px;
-              border-radius:12px;
-            ">
-
-            <br><br>
-
-            <div class="info">
-            Take Screenshot and provide QR to user
-            </div>
-
-            <br><br>
-
-            <button
-            onclick="continueScanning()"
-            style="
-                padding:16px 40px;
-                font-size:22px;
-                border:none;
-                border-radius:12px;
-                background:white;
-                color:black;
-                font-weight:bold;
-                cursor:pointer;
-            ">
-            CONTINUE
-            </button>
-
         `;
 
-        screen.style.display =
-        "flex";
+        const createBtn =
+            document.getElementById(
+                "createUserBtn"
+            );
 
-    })
-    .catch(err => {
+        createBtn.disabled = false;
+        createBtn.style.opacity = "1";
+
+    } catch (err) {
 
         hideBusy();
 
-        document.getElementById(
-          "createUserBtn"
-        ).disabled = false;
+        btn.disabled = false;
 
         alert(
-          "Error: " + err
+            "Error: " + err
         );
 
-    });
+    }
 
 }
 
+async function createUser() {
 
+    const user =
+        getAddUserData();
+
+    const age =
+        parseInt(
+            user.age,
+            10
+        );
+
+    if (
+        isNaN(age) ||
+        age <= 5
+    ) {
+
+        alert(
+            "Users aged 5 years or below need not be registered."
+        );
+
+        return;
+
+    }
+
+    const btn =
+        document.getElementById(
+            "createUserBtn"
+        );
+
+    btn.disabled = true;
+
+    try {
+
+        showBusy(
+            "Creating User..."
+        );
+
+        const res =
+            await api(
+                "addUser",
+                {
+                    uniqueId:
+                        AppState.suggestedUserId,
+
+                    name:
+                        user.name,
+
+                    gender:
+                        user.gender,
+
+                    age:
+                        user.age,
+
+                    facilitator:
+                        user.facilitator,
+
+                    passcode:
+                        user.passcode
+                }
+            );
+
+        hideBusy();
+
+        btn.disabled = false;
+
+        if (
+            res.status !==
+            "CREATED"
+        ) {
+
+            alert(
+                res.error ||
+                "User creation failed"
+            );
+
+            return;
+
+        }
+
+        playCreated();
+
+        await closeAddUserModal();
+
+        showUserCreated(
+            res.uniqueId
+        );
+
+    } catch (err) {
+
+        hideBusy();
+
+        btn.disabled = false;
+
+        alert(
+            "Error: " + err
+        );
+
+    }
+
+}

@@ -144,7 +144,7 @@ function showResult(res){
             </div>
 
             <div class="info">
-            Authority: ${currentAuthority}
+            Authority: ${AppState.currentAuthority}
             </div>
 
             <br><br>
@@ -211,7 +211,8 @@ function showResult(res){
 
 }
 
-function showUserCreated(res){
+
+function showUserCreated(uniqueId){
 
     const screen =
     document.getElementById(
@@ -236,28 +237,30 @@ function showUserCreated(res){
         Unique ID
         </div>
 
-        <div class="info"
+        <div
         style="
-            font-size:32px;
-            font-weight:bold;
+          font-size:28px;
+          font-weight:bold;
+          margin-top:10px;
         ">
-        ${res.uniqueId}
+        ${uniqueId}
         </div>
 
         <br>
 
         <img
-        src="https://quickchart.io/qr?text=${encodeURIComponent(res.uniqueId)}&size=250"
+        src="https://quickchart.io/qr?text=${encodeURIComponent(uniqueId)}&size=400"
         style="
-            background:white;
-            padding:10px;
-            border-radius:12px;
+          width:280px;
+          background:white;
+          padding:10px;
+          border-radius:12px;
         ">
 
         <br><br>
 
         <div class="info">
-        Take screenshot and provide QR to user
+        Take Screenshot and provide QR to user
         </div>
 
         <br><br>
@@ -272,6 +275,7 @@ function showUserCreated(res){
             background:white;
             color:black;
             font-weight:bold;
+            cursor:pointer;
         ">
         CONTINUE
         </button>
@@ -283,4 +287,64 @@ function showUserCreated(res){
 
 }
 
+function showMultipleMatches(res){
 
+    AppState.multipleMatches = res.matches;
+
+    const screen =
+    document.getElementById(
+      "resultScreen"
+    );
+
+    screen.className =
+    "result-screen approved";
+
+    let html = `
+        <div class="big-status">
+        MULTIPLE MATCHES
+        </div>
+
+        <div class="info">
+        Select the correct user
+        </div>
+
+        <br>
+    `;
+
+    res.matches.forEach((user,index) => {
+
+        html += `
+            <button
+            style="
+                width:90%;
+                margin:10px;
+                padding:20px;
+                font-size:18px;
+                background:white;
+                color:black;
+                border-radius:12px;
+            "
+            onclick="selectMatchedUser(${index})">
+                <b>${user.name}</b><br>
+                ${user.id}
+            </button>
+        `;
+
+    });
+
+    html += `
+        <br>
+        <button
+        onclick="continueScanning()">
+        CANCEL
+        </button>
+    `;
+
+    document.getElementById(
+      "resultContent"
+    ).innerHTML = html;
+
+    screen.style.display =
+    "flex";
+
+}

@@ -1,15 +1,40 @@
-async function api(action, params={}){
+async function api(action, params = {}) {
 
-  const qs =
-  new URLSearchParams({
-    action,
-    ...params
-  });
+    const qs =
+    new URLSearchParams({
+        action,
+        ...params
+    });
 
-  const res =
-  await fetch(
-    API_URL + "?" + qs
-  );
+    const response =
+    await fetch(
+        API_URL + "?" + qs
+    );
 
-  return res.json();
+    if (!response.ok) {
+
+        throw new Error(
+            `HTTP ${response.status}`
+        );
+
+    }
+
+    const data =
+    await response.json();
+
+    if (
+        data &&
+        data.status === "ERROR"
+    ) {
+
+        throw new Error(
+            data.error ||
+            data.message ||
+            "Unknown server error"
+        );
+
+    }
+
+    return data;
+
 }

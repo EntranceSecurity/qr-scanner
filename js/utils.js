@@ -23,3 +23,16 @@ function clearField(fieldId){
     field.focus();
 
 }
+
+function startHeartbeat(){
+
+    setInterval(() => {
+
+        fetch(
+            API_URL +
+            "?action=ping"
+        ).catch(()=>{});
+
+    },300000);
+
+}

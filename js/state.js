@@ -1,20 +1,21 @@
 const AppState = {
 
-  authority : "",
+    currentAuthority: "",
 
-  suggestedUserId : "",
+    html5QrCode: null,
 
-  scanner : null,
+    isProcessing: false,
 
-  watchdog : null
+    lastScan: "",
 
-  currentAuthority: "",
-  html5QrCode: null,
-  isProcessing: false,
-  lastScan: ""
-  lastScanTime: 0,
-  audioCtx: null,
-  scannerWatchdog: null,
-  suggestedUserId: "",
-  multipleMatches: []
+    lastScanTime: 0,
+
+    audioCtx: null,
+
+    scannerWatchdog: null,
+
+    suggestedUserId: "",
+
+    multipleMatches: []
+
 };

@@ -44,15 +44,13 @@ function loginAndStart(){
     )
     .disabled = true;
 
-    fetch(
-        API_URL +
-        "?action=login" +
-        "&authority=" +
-        encodeURIComponent(authority) +
-        "&passcode=" +
-        encodeURIComponent(passcode)
+    api(
+    "login",
+    {
+        authority,
+        passcode
+    }
     )
-    .then(r => r.json())
     .then(res => {
 
         hideBusy();
@@ -69,7 +67,7 @@ function loginAndStart(){
         ){
             unlockAudio();
 
-            currentAuthority =
+            AppState.currentAuthority =
             authority;
 
             // Hide login controls
@@ -149,12 +147,9 @@ function loginAndStart(){
 
 }
 
-loadAuthorities();
-
 function loadAuthorities(){
 
-    fetch(API_URL + "?action=authorities")
-    .then(r => r.json())
+    api("authorities")
     .then(data => {
 
         const ddl =
@@ -174,15 +169,9 @@ function loadAuthorities(){
 
 }
 
-loadFacilitators();
-
 function loadFacilitators(){
 
-    fetch(
-      API_URL +
-      "?action=facilitators"
-    )
-    .then(r => r.json())
+    api("facilitators")
     .then(data => {
 
         const addUserDDL =
