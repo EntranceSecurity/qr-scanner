@@ -122,6 +122,7 @@ button{
 
 <input
     type="password"
+    inputmode="numeric"
     id="passcode"
     placeholder="Authority Passcode">
 
@@ -1310,17 +1311,25 @@ function closeHelpModal(){
 
 }
 function createUser(){
-    
-    // if(!suggestedUserId){
+    const age =
+    parseInt(
+      document.getElementById(
+        "newAge"
+      ).value,
+      10
+    );
 
-    //     alert(
-    //       "Please Generate ID first"
-    //     );
+    if(
+      isNaN(age) ||
+      age <= 5
+    ){
 
-    //     return;
-    // }
+        alert(
+          "Users aged 5 years or below need not be registered."
+        );
 
-    // hideBusy();
+        return;
+    }
 
     document.getElementById(
       "createUserBtn"
@@ -1620,6 +1629,8 @@ placeholder="Name">
 </select>
 
 <input
+type="number"
+inputmode="numeric"
 id="newAge"
 placeholder="Age">
 
