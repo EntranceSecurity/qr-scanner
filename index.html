@@ -200,7 +200,8 @@ let currentAuthority = "";
 let isProcessing = false;
 let lastScan = "";
 let lastScanTime = 0;
-
+let audioCtx = null;
+    
 const USER_GUIDE_HTML = `
 <h2>User Guide</h2>
 
@@ -754,7 +755,22 @@ function onScanSuccess(decodedText){
 RESULT UI
 --------------------------------------------------
 */
+function getAudioContext(){
 
+    if(!audioCtx){
+
+        audioCtx =
+        new(
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    }
+
+    return audioCtx;
+
+}
+    
 function showResult(res){
     if(!res){
         console.error("Empty response");
@@ -948,10 +964,10 @@ async function continueScanning(){
     lastScan = "";
     lastScanTime = 0;
 
-    window.scrollTo(
-        0,
-        0
-    );
+    // window.scrollTo(
+    //     0,
+    //     0
+    // );
 
 }
 
@@ -964,8 +980,7 @@ SUCCESS BEEP
 function playSuccess(){
 
     const ctx =
-    new(window.AudioContext ||
-    window.webkitAudioContext)();
+    getAudioContext();
 
     const osc =
     ctx.createOscillator();
@@ -973,17 +988,19 @@ function playSuccess(){
     const gain =
     ctx.createGain();
 
-    osc.type="sine";
-    osc.frequency.value=900;
+    osc.type = "sine";
+    osc.frequency.value = 900;
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    gain.gain.value=0.3;
+    gain.gain.value = 0.3;
 
     osc.start();
 
-    osc.stop(ctx.currentTime + 0.15);
+    osc.stop(
+        ctx.currentTime + 0.15
+    );
 
 }
 
@@ -1157,8 +1174,7 @@ FAILURE ALARM
 function playFailure(){
 
     const ctx =
-    new(window.AudioContext ||
-    window.webkitAudioContext)();
+    getAudioContext();
 
     [0,0.25,0.5].forEach(offset => {
 
@@ -1168,8 +1184,8 @@ function playFailure(){
         const gain =
         ctx.createGain();
 
-        osc.type="sawtooth";
-        osc.frequency.value=750;
+        osc.type = "sawtooth";
+        osc.frequency.value = 750;
 
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -1195,7 +1211,7 @@ function playFailure(){
     });
 
 }
-
+    
 let suggestedUserId = "";
 
 function openAddUserModal(){
