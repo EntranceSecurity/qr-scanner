@@ -300,6 +300,8 @@ function hideBusy(){
 }
 function showMultipleMatches(res){
 
+    window.multipleMatches = res.matches;
+
     const screen =
     document.getElementById(
       "resultScreen"
@@ -320,7 +322,7 @@ function showMultipleMatches(res){
         <br>
     `;
 
-    res.matches.forEach(user => {
+    res.matches.forEach((user,index) => {
 
         html += `
             <button
@@ -333,11 +335,8 @@ function showMultipleMatches(res){
                 color:black;
                 border-radius:12px;
             "
-            onclick="showVerifiedUser({
-                id:${JSON.stringify(user.id)},
-                name:${JSON.stringify(user.name)}
-            })">
-                ${user.name}<br>
+            onclick="selectMatchedUser(${index})">
+                <b>${user.name}</b><br>
                 ${user.id}
             </button>
         `;
@@ -355,56 +354,6 @@ function showMultipleMatches(res){
     document.getElementById(
       "resultContent"
     ).innerHTML = html;
-
-    screen.style.display =
-    "flex";
-
-}
-function showVerifiedUser(res){
-
-    const screen =
-    document.getElementById(
-      "resultScreen"
-    );
-
-    screen.className =
-    "result-screen approved";
-
-    document.getElementById(
-      "resultContent"
-    ).innerHTML = `
-
-        <div class="big-status">
-        ✓ VERIFIED
-        </div>
-
-        <div class="info">
-        ${res.name}
-        </div>
-
-        <div class="info">
-        ${res.id}
-        </div>
-
-        <br>
-
-        <img
-        src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
-        style="
-            width:280px;
-            background:white;
-            padding:10px;
-            border-radius:12px;
-        ">
-
-        <br><br>
-
-        <button
-        onclick="continueScanning()">
-        CONTINUE
-        </button>
-
-    `;
 
     screen.style.display =
     "flex";
@@ -493,7 +442,62 @@ function loadAuthorities(){
     });
 
 }
+    
+function selectMatchedUser(index){
 
+    const user =
+    window.multipleMatches[index];
+
+    const screen =
+    document.getElementById(
+      "resultScreen"
+    );
+
+    screen.className =
+    "result-screen approved";
+
+    document.getElementById(
+      "resultContent"
+    ).innerHTML = `
+        <div class="big-status">
+        ✓ VERIFIED
+        </div>
+
+        <div class="info">
+        Unique ID: ${user.id}
+        </div>
+
+        <div class="info">
+        Name: ${user.name}
+        </div>
+
+        <div class="info">
+        Facilitator: ${user.facilitator}
+        </div>
+
+        <div class="info">
+        Passcode: ${user.passcode}
+        </div>
+
+        <br>
+
+        <img
+        src="https://quickchart.io/qr?text=${encodeURIComponent(user.id)}&size=400"
+        style="
+            width:280px;
+            background:white;
+            padding:10px;
+            border-radius:12px;
+        ">
+
+        <br><br>
+
+        <button onclick="continueScanning()">
+        CONTINUE
+        </button>
+    `;
+
+}
 /*
 --------------------------------------------------
 LOGIN
