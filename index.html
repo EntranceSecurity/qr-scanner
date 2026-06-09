@@ -473,58 +473,39 @@ function loadAuthorities(){
 }
     
 function selectMatchedUser(index){
-    playSuccess()
+
     const user =
     window.multipleMatches[index];
 
-    const screen =
-    document.getElementById(
-      "resultScreen"
+    showBusy(
+      "Confirming User..."
     );
 
-    screen.className =
-    "result-screen approved";
+    fetch(
+        API_URL +
+        "?action=confirmManualMatch" +
+        "&uniqueId=" +
+        encodeURIComponent(user.id) +
+        "&authority=" +
+        encodeURIComponent(currentAuthority)
+    )
+    .then(r => r.json())
+    .then(res => {
 
-    document.getElementById(
-      "resultContent"
-    ).innerHTML = `
-        <div class="big-status">
-        ✓ VERIFIED
-        </div>
+        hideBusy();
 
-        <div class="info">
-        Unique ID: ${user.id}
-        </div>
+        showVerifiedUser(res);
 
-        <div class="info">
-        Name: ${user.name}
-        </div>
+    })
+    .catch(err => {
 
-        <div class="info">
-        Facilitator: ${user.facilitator}
-        </div>
+        hideBusy();
 
-        <div class="info">
-        Passcode: ${user.passcode}
-        </div>
+        alert(
+          "Verification Error: " + err
+        );
 
-        <br>
-
-        <img
-        src="https://quickchart.io/qr?text=${encodeURIComponent(user.id)}&size=400"
-        style="
-            width:280px;
-            background:white;
-            padding:10px;
-            border-radius:12px;
-        ">
-
-        <br><br>
-
-        <button onclick="continueScanning()">
-        CONTINUE
-        </button>
-    `;
+    });
 
 }
 /*
@@ -596,6 +577,7 @@ function loginAndStart(){
           res.status ===
           "AUTHORIZED"
         ){
+            await unlockAudio();
 
             currentAuthority =
             authority;
@@ -858,6 +840,22 @@ function getAudioContext(){
     }
 
     return audioCtx;
+
+}
+
+async function unlockAudio(){
+
+    const ctx = getAudioContext();
+
+    if(ctx.state === "suspended"){
+
+        try{
+            await ctx.resume();
+        }catch(e){
+            console.log(e);
+        }
+
+    }
 
 }
     
@@ -1137,6 +1135,10 @@ function playCreated(){
     const ctx =
     getAudioContext();
 
+    if(ctx.state === "suspended"){
+        ctx.resume();
+    }
+    
     const notes =
     [523,659,784];
 
@@ -1178,9 +1180,12 @@ function playCreated(){
     
 function playSuccess(){
 
-    const ctx =
-    getAudioContext();
+    const ctx = getAudioContext();
 
+    if(ctx.state === "suspended"){
+        ctx.resume();
+    }
+    
     const osc =
     ctx.createOscillator();
 
@@ -1414,6 +1419,10 @@ function playFailure(){
 
     const ctx =
     getAudioContext();
+    
+    if(ctx.state === "suspended"){
+        ctx.resume();
+    }
 
     [0,0.25,0.5].forEach(offset => {
 
