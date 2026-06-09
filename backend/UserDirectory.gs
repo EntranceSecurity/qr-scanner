@@ -120,8 +120,8 @@ function processSearch(e) {
 			"User Directory sheet not found"
 		);
 	}
-  const data = getUsersCache 
-	/* sheet.getDataRange().getValues(); */
+
+  const data = getUsersCache();
   
   const headers = data[0];
 
