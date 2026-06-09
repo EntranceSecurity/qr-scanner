@@ -229,6 +229,7 @@ let isProcessing = false;
 let lastScan = "";
 let lastScanTime = 0;
 let audioCtx = null;
+let scannerWatchdog = null;
     
 const USER_GUIDE_HTML = `
 <h2>User Guide</h2>
@@ -695,6 +696,10 @@ async function startScanner(){
 
     );
 
+    if(scannerWatchdog){
+        clearInterval(scannerWatchdog);
+    }
+
     setInterval(async ()=>{
 
     try{
@@ -1112,11 +1117,7 @@ async function continueScanning(){
 
     try{
 
-    if(html5QrCode?.isScanning){
-
-            html5QrCode.resume();
-    
-        }
+        await restartScanner();
     
     }catch(e){
     
