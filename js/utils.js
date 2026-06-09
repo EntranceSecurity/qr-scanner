@@ -28,10 +28,7 @@ function startHeartbeat(){
 
     setInterval(() => {
 
-        fetch(
-            API_URL +
-            "?action=ping"
-        ).catch(()=>{});
+        api("ping").catch(()=>{});
 
     },300000);
 

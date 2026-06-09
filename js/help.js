@@ -5,9 +5,10 @@ const USER_GUIDE_HTML = `
 
 <ol>
 <li>Login</li>
-<li>QR Scan</li>
+<li>Scan QR</li>
 <li>Manual Verification</li>
 <li>Add New User</li>
+<li>Result Screen</li>
 <li>Troubleshooting</li>
 </ol>
 
@@ -16,48 +17,58 @@ const USER_GUIDE_HTML = `
 <h3>1. Login</h3>
 
 <ul>
-<li>Select Security Authority.</li>
-<li>Enter Passcode.</li>
-<li>Click LOGIN.</li>
+<li>Select your Security Authority from the dropdown.</li>
+<li>Enter your passcode and click LOGIN.</li>
+<li>After login, the QR scanner starts and the MANUAL VERIFY, ADD NEW USER, and HELP buttons appear.</li>
 </ul>
 
-<h3>2. QR Scan</h3>
+<h3>2. Scan QR</h3>
 
 <ul>
-<li>Point camera at QR code.</li>
-<li>Wait for vibration and verification.</li>
-<li>Green screen = Approved.</li>
-<li>Red screen = Denied.</li>
-<li>Press CONTINUE for next scan.</li>
+<li>Point the camera at the user’s QR code.</li>
+<li>Wait for the app to verify the code.</li>
+<li>Approved scans show a green-approved screen with user details.</li>
+<li>Denied scans show a red-denied screen with "Unknown QR Code."</li>
+<li>Press CONTINUE to return to scanning for the next user.</li>
 </ul>
 
 <h3>3. Manual Verification</h3>
 
 <ul>
-<li>Use when QR code is unavailable.</li>
-<li>Enter either Unique ID OR Name + Facilitator + Passcode.</li>
-<li>If verified, user details and QR code are displayed.</li>
-<li>Take screenshot if QR needs reprinting.</li>
+<li>Use MANUAL VERIFY when the QR code cannot be scanned or is missing.</li>
+<li>Enter either the Unique ID OR all of: Name, Facilitator, and Passcode.</li>
+<li>Click VERIFY to check the user.</li>
+<li>If multiple matches appear, select the correct user from the list.</li>
+<li>Approved manual verification shows the user details and a QR code for screenshot or reprint.</li>
 </ul>
 
 <h3>4. Add New User</h3>
 
 <ul>
-<li>Enter Name, Gender, Age, Facilitator and Passcode.</li>
-<li>Click GENERATE ID.</li>
-<li>Verify generated ID.</li>
-<li>Click CREATE USER.</li>
-<li>Take screenshot of generated QR code.</li>
-<li>Provide QR code to user for future entry.</li>
+<li>Click ADD NEW USER to open the registration form.</li>
+<li>Enter Name, Gender, Age, Facilitator, and Passcode.</li>
+<li>Click GENERATE ID to create a Unique ID.</li>
+<li>If a matching registration exists, confirm before creating a new user.</li>
+<li>Click CREATE USER after the ID is generated.</li>
+<li>Take a screenshot of the generated QR code and give it to the user.</li>
+<li>Note: users aged 5 or below are not registered through this app.</li>
 </ul>
 
-<h3>5. Troubleshooting</h3>
+<h3>5. Result Screen</h3>
 
 <ul>
-<li>If scanner does not respond, press CONTINUE and scan again.</li>
-<li>If login fails, verify Authority and Passcode.</li>
-<li>If Facilitator is unavailable, contact Superadmin.</li>
-<li>If network is unavailable, reconnect and retry.</li>
+<li>After any verification or user creation, press CONTINUE to go back to scanning.</li>
+<li>Review the displayed Unique ID, Name, Facilitator, and Passcode when approved.</li>
+<li>For newly created users, save the displayed QR code immediately.</li>
+</ul>
+
+<h3>6. Troubleshooting</h3>
+
+<ul>
+<li>If login fails, check the selected Authority and entered Passcode.</li>
+<li>If the camera does not scan, adjust QR position, distance, or lighting.</li>
+<li>If a valid user is denied, use MANUAL VERIFY with the user’s details.</li>
+<li>If no facilitator list appears, refresh the page and try again.</li>
 </ul>
 
 <hr>

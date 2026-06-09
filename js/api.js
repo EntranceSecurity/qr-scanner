@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbytSuDftiIWfMNNbhx4TFeS6nYxVJBA_NjOGMs9rghHVHk4FXVYIRwHc95db80ArkA7hg/exec";
+const API_URL = "https://proxy.adminsecurity108.workers.dev/";
 
 async function api(action, params = {}) {
 
