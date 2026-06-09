@@ -713,6 +713,68 @@ function startScanner(){
 
     );
 
+    setInterval(async ()=>{
+
+    try{
+
+        const video =
+        document.querySelector(
+          "#scanner video"
+        );
+
+        if(!video) return;
+
+        const t1 =
+        video.currentTime;
+
+        setTimeout(async ()=>{
+
+            if(!video) return;
+
+            const t2 =
+            video.currentTime;
+
+            if(
+                html5QrCode?.isScanning &&
+                t1 === t2
+            ){
+
+                console.log(
+                  "Frozen video detected"
+                );
+
+                try{
+
+                    await html5QrCode.stop();
+
+                    await html5QrCode.start(
+                        {
+                            facingMode:"environment"
+                        },
+                        {
+                            fps:10,
+                            qrbox:250
+                        },
+                        onScanSuccess
+                    );
+
+                }catch(err){
+
+                    console.log(err);
+
+                }
+
+            }
+
+        },3000);
+
+    }catch(err){
+
+        console.log(err);
+
+    }
+
+},30000);
 }
 
 /*
@@ -988,6 +1050,10 @@ async function continueScanning(){
       "resultScreen"
     ).style.display = "none";
 
+    document.getElementById(
+      "resultContent"
+    ).innerHTML = "";
+
     // Manual Verification
 
     document.getElementById(
@@ -1020,31 +1086,19 @@ async function continueScanning(){
       "newPasscode"
     ).value = "";
 
-    if(
-      document.getElementById(
-        "newGender"
-      )
-    ){
+    if(document.getElementById("newGender")){
         document.getElementById(
           "newGender"
         ).value = "";
     }
 
-    if(
-      document.getElementById(
-        "newAge"
-      )
-    ){
+    if(document.getElementById("newAge")){
         document.getElementById(
           "newAge"
         ).value = "";
     }
 
-    if(
-      document.getElementById(
-        "generatedId"
-      )
-    ){
+    if(document.getElementById("generatedId")){
         document.getElementById(
           "generatedId"
         ).innerHTML = "";
@@ -1055,18 +1109,73 @@ async function continueScanning(){
     isProcessing = false;
     lastScan = "";
     lastScanTime = 0;
-    document
-    .activeElement
-    ?.blur();
+
+    document.activeElement?.blur();
+
+    try{
+
+    if(html5QrCode?.isScanning){
+
+            html5QrCode.resume();
+    
+        }
+    
+    }catch(e){
+    
+        console.log(e);
+    
+    }
 
 }
-
 /*
 --------------------------------------------------
 SUCCESS BEEP
 --------------------------------------------------
 */
+function playCreated(){
 
+    const ctx =
+    getAudioContext();
+
+    const notes =
+    [523,659,784];
+
+    notes.forEach((freq,index)=>{
+
+        const osc =
+        ctx.createOscillator();
+
+        const gain =
+        ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = freq;
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        gain.gain.setValueAtTime(
+            0.25,
+            ctx.currentTime + index * 0.12
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.01,
+            ctx.currentTime + index * 0.12 + 0.18
+        );
+
+        osc.start(
+            ctx.currentTime + index * 0.12
+        );
+
+        osc.stop(
+            ctx.currentTime + index * 0.12 + 0.18
+        );
+
+    });
+
+}
+    
 function playSuccess(){
 
     const ctx =
@@ -1345,7 +1454,11 @@ function playFailure(){
 let suggestedUserId = "";
 
 function openAddUserModal(){
+    if(html5QrCode?.isScanning){
 
+        html5QrCode.pause(true);
+    
+    }
     suggestedUserId = "";
 
     document.getElementById(
@@ -1420,7 +1533,23 @@ function closeAddUserModal(){
       "addUserModal"
     ).style.display = "none";
 
+    try{
+
+        if(html5QrCode?.isScanning){
+
+            html5QrCode.resume();
+
+        }
+
+    }catch(e){
+
+        console.log(e);
+
+    }
+
 }
+
+    
 function generateUserId(){
 
     const name =
@@ -1754,10 +1883,10 @@ function createUser(){
             return;
 
         }
-        
+        playCreated();
         
         closeAddUserModal();
-
+        
         const screen =
         document.getElementById(
           "resultScreen"
