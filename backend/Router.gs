@@ -7,7 +7,7 @@ function doGet(e) {
 
   try {
 
-    const action = e.parameter.action || "";
+    const action = String(e.parameter.action || "").trim();
 
     if(action === "ping"){
         return json({

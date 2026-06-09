@@ -16,13 +16,12 @@ function json(obj) {
 
 function onEdit(e) {
 
+	if(!e) return;
+
   const sheet =
     e.source.getActiveSheet();
 
-  if (
-    sheet.getName() ===
-    "User Directory"
-  ) {
+  if (sheet.getName() === SHEETS.USERS) {
 
     clearUserCache();
 

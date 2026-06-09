@@ -31,7 +31,11 @@ function isDuplicateScan(id, authority) {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("Access Logs");
+    .getSheetByName(SHEETS.LOGS);
+
+	if(!sheet){
+		return false;
+	}
 
   const lastRow = sheet.getLastRow();
 

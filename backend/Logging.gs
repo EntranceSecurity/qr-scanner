@@ -7,8 +7,14 @@ function writeLog(result, authority) {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("Access Logs");
+    .getSheetByName(SHEETS.LOGS);
 
+  if(!sheet){
+		throw new Error(
+			"Access Logs sheet not found"
+		);
+	}
+	
   sheet.appendRow([
     result.id,
     new Date(),

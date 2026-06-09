@@ -7,7 +7,14 @@ function getAuthorities() {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("Authorities");
+    .getSheetByName(SHEETS.AUTHORITIES);
+
+	if(!sheet){
+		return json({
+			status:"ERROR",
+			error:"Authorities sheet not found"
+		});
+	}
 
   const data = sheet.getDataRange().getValues();
 
@@ -45,8 +52,14 @@ function validateAuthority(e) {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("Authorities");
+    .getSheetByName(SHEETS.AUTHORITIES);
 
+	if(!sheet){
+		return json({
+			status:"ERROR",
+			error:"Authorities sheet not found"
+		});
+	}
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
@@ -73,7 +86,14 @@ function getFacilitators(){
     const sheet =
     SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("Facilitators");
+    .getSheetByName(SHEETS.FACILITATORS);
+
+		if(!sheet){
+			return json({
+				status:"ERROR",
+				error:"Facilitators sheet not found"
+			});
+		}
 
     const data =
     sheet.getDataRange().getValues();

@@ -15,7 +15,13 @@ function getUsersCache() {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("User Directory");
+    .getSheetByName(SHEETS.USERS);
+
+	if(!sheet){
+		throw new Error(
+			"User Directory sheet not found"
+		);
+	}
 
   const data = sheet.getDataRange().getValues();
 
@@ -36,6 +42,9 @@ function getUsersCache() {
       data[i][idCol]
     ).trim();
 
+		if(!id){
+			continue;
+		}
     users[id] = {
       name: data[i][nameCol],
       gender: data[i][genderCol],
@@ -104,9 +113,16 @@ function processSearch(e) {
 
   const sheet = SpreadsheetApp
     .openById(SHEET_ID)
-    .getSheetByName("User Directory");
+    .getSheetByName(SHEETS.USERS);
 
-  const data = sheet.getDataRange().getValues();
+	if(!sheet){
+		throw new Error(
+			"User Directory sheet not found"
+		);
+	}
+  const data = getUsersCache 
+	/* sheet.getDataRange().getValues(); */
+  
   const headers = data[0];
 
   const idCol = headers.indexOf("Unique ID");
@@ -158,12 +174,7 @@ function processSearch(e) {
 }
 
 function clearUserCache(){
-
     CacheService
     .getScriptCache()
     .remove("USER_DIRECTORY");
-
-    Logger.log(
-      "USER_DIRECTORY cache cleared"
-    );
 }

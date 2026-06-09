@@ -38,7 +38,14 @@ function manualVerify(e){
 
   const sheet = SpreadsheetApp
       .openById(SHEET_ID)
-      .getSheetByName("User Directory");
+      .getSheetByName(SHEETS.USERS);
+
+	if(!sheet){
+		return json({
+			status:"ERROR",
+			error:"User Directory sheet not found"
+		});
+	}
 
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
@@ -75,7 +82,7 @@ function manualVerify(e){
         String(row[passcodeCol]).trim() === passcode;
 
     }
-    Logger.log(match)
+
     if(match){
 
       matches.push({
