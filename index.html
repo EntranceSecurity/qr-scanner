@@ -960,14 +960,73 @@ async function continueScanning(){
       "resultScreen"
     ).style.display = "none";
 
+    // Manual Verification
+
+    document.getElementById(
+      "manualUniqueId"
+    ).value = "";
+
+    document.getElementById(
+      "manualName"
+    ).value = "";
+
+    document.getElementById(
+      "manualFacilitator"
+    ).value = "";
+
+    document.getElementById(
+      "manualPasscode"
+    ).value = "";
+
+    // Add User
+
+    document.getElementById(
+      "newName"
+    ).value = "";
+
+    document.getElementById(
+      "newFacilitator"
+    ).value = "";
+
+    document.getElementById(
+      "newPasscode"
+    ).value = "";
+
+    if(
+      document.getElementById(
+        "newGender"
+      )
+    ){
+        document.getElementById(
+          "newGender"
+        ).value = "";
+    }
+
+    if(
+      document.getElementById(
+        "newAge"
+      )
+    ){
+        document.getElementById(
+          "newAge"
+        ).value = "";
+    }
+
+    if(
+      document.getElementById(
+        "generatedId"
+      )
+    ){
+        document.getElementById(
+          "generatedId"
+        ).innerHTML = "";
+    }
+
+    suggestedUserId = "";
+
     isProcessing = false;
     lastScan = "";
     lastScanTime = 0;
-
-    // window.scrollTo(
-    //     0,
-    //     0
-    // );
 
 }
 
@@ -1004,7 +1063,103 @@ function playSuccess(){
 
 }
 
+function showVerifiedUser(user){
+
+    playSuccess();
+
+    const screen =
+    document.getElementById(
+      "resultScreen"
+    );
+
+    const content =
+    document.getElementById(
+      "resultContent"
+    );
+
+    screen.className =
+    "result-screen approved";
+
+    content.innerHTML = `
+
+        <div class="big-status">
+        ✓ VERIFIED
+        </div>
+
+        <div class="info">
+        Unique ID: ${user.id}
+        </div>
+
+        <div class="info">
+        Name: ${user.name}
+        </div>
+
+        <div class="info">
+        Facilitator: ${user.facilitator}
+        </div>
+
+        <div class="info">
+        Passcode: ${user.passcode}
+        </div>
+
+        <br>
+
+        <img
+        src="https://quickchart.io/qr?text=${encodeURIComponent(user.id)}&size=400"
+        style="
+            width:280px;
+            background:white;
+            padding:10px;
+            border-radius:12px;
+        ">
+
+        <br><br>
+
+        <div class="info">
+        Take Screenshot if QR needs re-printing
+        </div>
+
+        <br><br>
+
+        <button
+        onclick="continueScanning()"
+        style="
+            padding:16px 40px;
+            font-size:22px;
+            border:none;
+            border-radius:12px;
+            background:white;
+            color:black;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+        CONTINUE
+        </button>
+
+    `;
+
+    screen.style.display =
+    "flex";
+
+}
+
 function openManualVerification(){
+
+    document.getElementById(
+        "manualUniqueId"
+    ).value = "";
+
+    document.getElementById(
+        "manualName"
+    ).value = "";
+
+    document.getElementById(
+        "manualFacilitator"
+    ).value = "";
+
+    document.getElementById(
+        "manualPasscode"
+    ).value = "";
 
     document.getElementById(
         "manualModal"
@@ -1015,11 +1170,27 @@ function openManualVerification(){
 function closeManualVerification(){
 
     document.getElementById(
+        "manualUniqueId"
+    ).value = "";
+
+    document.getElementById(
+        "manualName"
+    ).value = "";
+
+    document.getElementById(
+        "manualFacilitator"
+    ).value = "";
+
+    document.getElementById(
+        "manualPasscode"
+    ).value = "";
+
+    document.getElementById(
         "manualModal"
     ).style.display = "none";
 
 }
-
+    
 function submitManualVerification(){
 
     const uniqueId =
@@ -1066,81 +1237,9 @@ function submitManualVerification(){
             closeManualVerification();
     
             if(res.status === "APPROVED"){
-    
-                const screen =
-                document.getElementById(
-                  "resultScreen"
-                );
-    
-                const content =
-                document.getElementById(
-                  "resultContent"
-                );
-    
-                screen.className =
-                "result-screen approved";
-    
-                content.innerHTML = `
-    
-                    <div class="big-status">
-                    ✓ VERIFIED
-                    </div>
-    
-                    <div class="info">
-                    Unique ID: ${res.id}
-                    </div>
-    
-                    <div class="info">
-                    Name: ${res.name}
-                    </div>
-    
-                    <div class="info">
-                    Facilitator: ${res.facilitator}
-                    </div>
-    
-                    <div class="info">
-                    Passcode: ${res.passcode}
-                    </div>
-    
-                    <br>
-    
-                    <img
-                    src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
-                    style="
-                        width:280px;
-                        background:white;
-                        padding:10px;
-                        border-radius:12px;
-                    ">
-    
-                    <br><br>
-    
-                    <div class="info">
-                    Take Screenshot if QR needs re-printing
-                    </div>
-    
-                    <br><br>
-    
-                    <button
-                    onclick="continueScanning()"
-                    style="
-                        padding:16px 40px;
-                        font-size:22px;
-                        border:none;
-                        border-radius:12px;
-                        background:white;
-                        color:black;
-                        font-weight:bold;
-                        cursor:pointer;
-                    ">
-                    CONTINUE
-                    </button>
-    
-                `;
-    
-                screen.style.display =
-                "flex";
-    
+
+                showVerifiedUser(res);
+            
             }
             else if(res.status === "MULTIPLE_MATCHES"){
 
@@ -1251,16 +1350,46 @@ function openAddUserModal(){
     ).style.display = "block";
 
 }
+
 function closeAddUserModal(){
 
-    document
-        .getElementById(
-          "addUserModal"
-        )
-        .style.display = "none";
-    
+    document.getElementById(
+      "newName"
+    ).value = "";
+
+    document.getElementById(
+      "newFacilitator"
+    ).value = "";
+
+    document.getElementById(
+      "newPasscode"
+    ).value = "";
+
+    if(
+      document.getElementById(
+        "newGender"
+      )
+    ){
+        document.getElementById(
+          "newGender"
+        ).value = "";
     }
-    
+
+    if(
+      document.getElementById(
+        "newAge"
+      )
+    ){
+        document.getElementById(
+          "newAge"
+        ).value = "";
+    }
+
+    document.getElementById(
+      "addUserModal"
+    ).style.display = "none";
+
+}
 function generateUserId(){
 
     const name =
@@ -1707,12 +1836,14 @@ function createUser(){
 
     <input
         id="manualUniqueId"
+        type="search"
         placeholder="Unique ID">
 
     <p>OR</p>
 
     <input
         id="manualName"
+        type="search"
         placeholder="Name">
 
     <select
@@ -1724,6 +1855,7 @@ function createUser(){
 
     <input
         id="manualPasscode"
+        type="search"
         placeholder="Passcode">
 
     <br>
@@ -1809,6 +1941,7 @@ border-radius:10px;
 
 <input
 id="newName"
+type="search"
 placeholder="Name">
 
 <select id="newGender">
@@ -1841,6 +1974,7 @@ placeholder="Age">
     
 <input
 id="newPasscode"
+type="search"
 placeholder="Passcode">
 
 <button
