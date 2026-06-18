@@ -1,4 +1,4 @@
-function showBusy(message, delay = 120){
+function showBusy(message, delay = 1){
     if(AppState.busyTimeout){
         clearTimeout(AppState.busyTimeout);
     }

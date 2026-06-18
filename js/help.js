@@ -14,15 +14,7 @@ const USER_GUIDE_HTML = `
 
 <hr>
 
-<h3>1. Login</h3>
-
-<ul>
-<li>Use the Authority dropdown and Passcode field on the main screen.</li>
-<li>Click LOGIN to sign in.</li>
-<li>After login, the scanner starts and the action buttons appear.</li>
-</ul>
-
-<h3>2. Scan QR</h3>
+<h3>1. Scan QR</h3>
 
 <ul>
 <li>Point the camera at the user’s QR code.</li>
@@ -32,7 +24,7 @@ const USER_GUIDE_HTML = `
 <li>Press CONTINUE to return to scanning for the next user.</li>
 </ul>
 
-<h3>3. Manual Verification</h3>
+<h3>2. Manual Verification</h3>
 
 <ul>
 <li>Use MANUAL VERIFY when the QR code cannot be scanned or is missing.</li>
@@ -42,7 +34,7 @@ const USER_GUIDE_HTML = `
 <li>Approved manual verification shows the user details and a QR code for screenshot or reprint.</li>
 </ul>
 
-<h3>4. Add New User</h3>
+<h3>3. Add New User</h3>
 
 <ul>
 <li>Click ADD NEW USER to open the registration form.</li>
@@ -54,7 +46,7 @@ const USER_GUIDE_HTML = `
 <li>Note: users aged 5 or below are not registered through this app.</li>
 </ul>
 
-<h3>5. Result Screen</h3>
+<h3>4. Result Screen</h3>
 
 <ul>
 <li>After any verification or user creation, press CONTINUE to go back to scanning.</li>
@@ -62,7 +54,7 @@ const USER_GUIDE_HTML = `
 <li>For newly created users, save the displayed QR code immediately.</li>
 </ul>
 
-<h3>6. Troubleshooting</h3>
+<h3>5. Troubleshooting</h3>
 
 <ul>
 <li>If login fails, check the selected Authority and entered Passcode.</li>

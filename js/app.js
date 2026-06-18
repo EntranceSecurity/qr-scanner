@@ -138,6 +138,7 @@ async function loadStartupData(){
 function saveUserIndex(userIndex) {
     try {
         localStorage.setItem("userIndex", JSON.stringify(userIndex));
+        try { AppState.userIndex = userIndex; } catch (e) {}
     } catch (err) {
         console.warn("Failed to cache user index", err);
     }
@@ -145,8 +146,13 @@ function saveUserIndex(userIndex) {
 
 function getUserIndex() {
     try {
+        if (AppState.userIndex) return AppState.userIndex;
         const stored = localStorage.getItem("userIndex");
-        return stored ? JSON.parse(stored) : null;
+        const parsed = stored ? JSON.parse(stored) : null;
+        if (parsed) {
+            try { AppState.userIndex = parsed; } catch (e) {}
+        }
+        return parsed;
     } catch (err) {
         return null;
     }
@@ -230,6 +236,14 @@ function verifyManualOffline(uniqueId, name, facilitator, passcode, authority) {
 function initApp(){
 
     restoreCacheIndicator();
+
+    // Restore cached user index into memory for instant lookups
+    try {
+        const existing = getUserIndex();
+        if (existing) {
+            AppState.userIndex = existing;
+        }
+    } catch (e) {}
 
     registerServiceWorker();
 

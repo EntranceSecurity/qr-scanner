@@ -68,8 +68,12 @@ async function api(action, params = {}, options = {}) {
                 setCachedApi(action, params, data);
             }
 
+            // Inform caller and global indicator of successful sync
             if (notify) {
                 options.onCacheStatus("synced");
+            }
+            if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
+                try { window.setCacheIndicator('synced'); } catch (e) {}
             }
 
             return data;
@@ -77,6 +81,9 @@ async function api(action, params = {}, options = {}) {
             if (cachedData) {
                 if (notify) {
                     options.onCacheStatus("offline");
+                }
+                if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
+                    try { window.setCacheIndicator('offline'); } catch (e) {}
                 }
                 return cachedData;
             }
@@ -90,6 +97,9 @@ async function api(action, params = {}, options = {}) {
     if (cachedData) {
         if (notify) {
             options.onCacheStatus("offline");
+        }
+        if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
+            try { window.setCacheIndicator('offline'); } catch (e) {}
         }
         return cachedData;
     }

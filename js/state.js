@@ -18,6 +18,8 @@ const AppState = {
 
     suggestedUserId: "",
 
-    multipleMatches: []
+    multipleMatches: [],
+
+    userIndex: null
 
 };
