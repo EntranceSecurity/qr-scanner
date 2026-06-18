@@ -4,7 +4,6 @@ const USER_GUIDE_HTML = `
 <h3>Contents</h3>
 
 <ol>
-<li>Login</li>
 <li>Scan QR</li>
 <li>Manual Verification</li>
 <li>Add New User</li>

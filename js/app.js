@@ -158,6 +158,23 @@ function getUserIndex() {
     }
 }
 
+// If the explicit `userIndex` key isn't available, try the cached `init` API payload
+function ensureUserIndexFromApiCache() {
+    try {
+        const existing = getUserIndex();
+        if (existing) return existing;
+        if (typeof getCachedApi === 'function') {
+            const initPayload = getCachedApi('init', {});
+            if (initPayload && initPayload.userIndex) {
+                try { saveUserIndex(initPayload.userIndex); } catch (e) {}
+                AppState.userIndex = initPayload.userIndex;
+                return initPayload.userIndex;
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
 function verifyUserOffline(userId) {
     const userIndex = getUserIndex();
     if (!userIndex || !userIndex.byId) return null;

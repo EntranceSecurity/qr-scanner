@@ -66,6 +66,18 @@ async function api(action, params = {}, options = {}) {
 
             if (useCache) {
                 setCachedApi(action, params, data);
+                // If init payload contains userIndex, persist it separately for immediate offline lookup
+                try {
+                    if (action === 'init' && data && data.userIndex) {
+                        localStorage.setItem('userIndex', JSON.stringify(data.userIndex));
+                        if (typeof AppState !== 'undefined') {
+                            try { AppState.userIndex = data.userIndex; } catch (e) {}
+                        }
+                        if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
+                            try { window.setCacheIndicator('cached'); } catch (e) {}
+                        }
+                    }
+                } catch (e) {}
             }
 
             // Inform caller and global indicator of successful sync
@@ -85,6 +97,15 @@ async function api(action, params = {}, options = {}) {
                 if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
                     try { window.setCacheIndicator('offline'); } catch (e) {}
                 }
+                    // If returning cached init payload, ensure userIndex is available separately
+                    try {
+                        if (action === 'init' && cachedData && cachedData.userIndex) {
+                            localStorage.setItem('userIndex', JSON.stringify(cachedData.userIndex));
+                            if (typeof AppState !== 'undefined') {
+                                try { AppState.userIndex = cachedData.userIndex; } catch (e) {}
+                            }
+                        }
+                    } catch (e) {}
                 return cachedData;
             }
             if (notify) {
@@ -101,6 +122,15 @@ async function api(action, params = {}, options = {}) {
         if (typeof window !== 'undefined' && typeof window.setCacheIndicator === 'function') {
             try { window.setCacheIndicator('offline'); } catch (e) {}
         }
+            // Ensure userIndex persisted when returning cached init payload from offline branch
+            try {
+                if (action === 'init' && cachedData && cachedData.userIndex) {
+                    localStorage.setItem('userIndex', JSON.stringify(cachedData.userIndex));
+                    if (typeof AppState !== 'undefined') {
+                        try { AppState.userIndex = cachedData.userIndex; } catch (e) {}
+                    }
+                }
+            } catch (e) {}
         return cachedData;
     }
 
