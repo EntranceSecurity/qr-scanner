@@ -75,6 +75,21 @@ function submitManualVerification(){
     );
 
     setTimeout(() => {
+        const cachedRes = verifyManualOffline(uniqueId, name, facilitator, passcode, AppState.currentAuthority);
+        if (cachedRes) {
+            hideBusy();
+            closeManualVerification();
+
+            if (cachedRes.status === "APPROVED") {
+                showVerifiedUser(cachedRes);
+            } else if (cachedRes.status === "MULTIPLE_MATCHES") {
+                showMultipleMatches(cachedRes);
+            } else {
+                showResult(cachedRes);
+            }
+            return;
+        }
+
         api(
             "manualVerify",
             {

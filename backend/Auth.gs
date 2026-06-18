@@ -199,6 +199,7 @@ function initData(){
     return json({
         status: "OK",
         authorities: getAuthoritiesList(),
-        facilitators: getFacilitatorsList()
+        facilitators: getFacilitatorsList(),
+        userIndex: getUsersIndex()
     });
 }

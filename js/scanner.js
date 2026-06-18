@@ -253,11 +253,19 @@ function onScanSuccess(decodedText){
     const startTime =
     performance.now();
 
+    const decodedId = decodedText.trim();
+
+    const cachedRes = verifyUserOffline(decodedId);
+    if (cachedRes) {
+        hideBusy();
+        showResult(cachedRes);
+        return;
+    }
+
     api(
         "scan",
         {
-            id:
-            decodedText.trim(),
+            id: decodedId,
 
             authority:
             AppState.currentAuthority

@@ -122,6 +122,9 @@ async function loadStartupData(){
         if (data) {
             loadAuthoritiesFromData(data.authorities || []);
             loadFacilitatorsFromData(data.facilitators || []);
+            if (data.userIndex) {
+                saveUserIndex(data.userIndex);
+            }
         }
     } catch (err) {
         console.warn("Startup data load failed", err);
@@ -130,6 +133,98 @@ async function loadStartupData(){
         loadAuthorities();
         loadFacilitators();
     }
+}
+
+function saveUserIndex(userIndex) {
+    try {
+        localStorage.setItem("userIndex", JSON.stringify(userIndex));
+    } catch (err) {
+        console.warn("Failed to cache user index", err);
+    }
+}
+
+function getUserIndex() {
+    try {
+        const stored = localStorage.getItem("userIndex");
+        return stored ? JSON.parse(stored) : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+function verifyUserOffline(userId) {
+    const userIndex = getUserIndex();
+    if (!userIndex || !userIndex.byId) return null;
+
+    const user = userIndex.byId[userId];
+    if (user) {
+        return {
+            status: "APPROVED",
+            id: userId,
+            name: user.name,
+            gender: user.gender,
+            age: user.age,
+            facilitator: user.facilitator,
+            passcode: user.passcode
+        };
+    }
+
+    return {
+        status: "DENIED",
+        id: userId
+    };
+}
+
+function verifyManualOffline(uniqueId, name, facilitator, passcode, authority) {
+    const userIndex = getUserIndex();
+    if (!userIndex) return null;
+
+    if (uniqueId && uniqueId.trim()) {
+        const user = userIndex.byId[uniqueId];
+        if (user) {
+            return {
+                status: "APPROVED",
+                id: uniqueId,
+                name: user.name,
+                gender: user.gender,
+                age: user.age,
+                facilitator: user.facilitator,
+                passcode: user.passcode
+            };
+        }
+        return {
+            status: "DENIED",
+            id: uniqueId
+        };
+    }
+
+    if (name && facilitator && passcode) {
+        const facilitatorKey = facilitator.toLowerCase() + "|" + passcode.toLowerCase();
+        const candidates = userIndex.byFacilitatorPasscode[facilitatorKey] || [];
+
+        const nameLower = name.toLowerCase();
+        const matches = candidates.filter(u => u.nameLower === nameLower);
+
+        if (matches.length === 1) {
+            const user = matches[0];
+            return {
+                status: "APPROVED",
+                id: user.id,
+                name: user.name,
+                gender: user.gender,
+                age: user.age,
+                facilitator: user.facilitator,
+                passcode: user.passcode
+            };
+        } else if (matches.length > 1) {
+            return {
+                status: "MULTIPLE_MATCHES",
+                matches: matches
+            };
+        }
+    }
+
+    return null;
 }
 
 function initApp(){
