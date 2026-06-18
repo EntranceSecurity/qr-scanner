@@ -32,8 +32,44 @@ function restoreCacheIndicator(){
     }
 }
 
-async function setCacheIndicator(status) {
+function getCacheStatusMessage(status) {
+    switch (status) {
+        case "synced":
+            return "Data synced";
+        case "cached":
+            return "Using cached data";
+        case "offline":
+            return "Offline — using cached data";
+        case "syncing":
+            return "Syncing data...";
+        case "error":
+            return "Connection error";
+        default:
+            return "Waiting for data";
+    }
+}
+
+function toggleCacheIndicatorInfo() {
+    const messageBox = document.getElementById("cacheIndicatorMessage");
+    if (!messageBox) return;
+    messageBox.classList.toggle("visible");
+}
+
+window.addEventListener("click", (event) => {
+    const messageBox = document.getElementById("cacheIndicatorMessage");
     const indicator = document.getElementById("cacheIndicator");
+    if (!messageBox || !indicator) return;
+    if (
+        !event.target.closest("#cacheIndicator") &&
+        !event.target.closest("#cacheIndicatorMessage")
+    ) {
+        messageBox.classList.remove("visible");
+    }
+});
+
+async function setCacheIndicator(status, message) {
+    const indicator = document.getElementById("cacheIndicator");
+    const messageBox = document.getElementById("cacheIndicatorMessage");
     if (!indicator) return;
 
     indicator.classList.remove(
@@ -41,26 +77,34 @@ async function setCacheIndicator(status) {
         "cache-indicator-cached",
         "cache-indicator-synced",
         "cache-indicator-offline",
-        "cache-indicator-syncing"
+        "cache-indicator-syncing",
+        "cache-indicator-error"
     );
 
     const label = indicator.querySelector(".cache-label");
+    const statusMessage = message || getCacheStatusMessage(status);
 
     if (status === "synced") {
         indicator.classList.add("cache-indicator-synced");
-        label.innerText = "Data synced";
     } else if (status === "cached") {
         indicator.classList.add("cache-indicator-cached");
-        label.innerText = "Using cached data";
     } else if (status === "offline") {
         indicator.classList.add("cache-indicator-offline");
-        label.innerText = "Offline — using cached data";
     } else if (status === "syncing") {
         indicator.classList.add("cache-indicator-syncing");
-        label.innerText = "Syncing data...";
+    } else if (status === "error") {
+        indicator.classList.add("cache-indicator-offline");
     } else {
         indicator.classList.add("cache-indicator-pending");
-        label.innerText = "Waiting for data";
+    }
+
+    if (label) {
+        label.innerText = statusMessage;
+    }
+    indicator.dataset.statusMessage = statusMessage;
+    if (messageBox) {
+        messageBox.innerText = statusMessage;
+        messageBox.classList.remove("visible");
     }
 
     saveCacheStatus(status);
@@ -81,7 +125,8 @@ async function loadStartupData(){
         }
     } catch (err) {
         console.warn("Startup data load failed", err);
-        setCacheIndicator("offline");
+        const offlineMessage = navigator.onLine ? (err.message || "Failed to refresh data") : "Offline and no cached data available";
+        setCacheIndicator("error", offlineMessage);
         loadAuthorities();
         loadFacilitators();
     }
@@ -94,11 +139,22 @@ function initApp(){
     registerServiceWorker();
 
     if (!navigator.onLine) {
-        setCacheIndicator("offline");
+        setCacheIndicator("offline", "Offline — using cached data if available");
     }
 
-    window.addEventListener("online", () => setCacheIndicator("syncing"));
-    window.addEventListener("offline", () => setCacheIndicator("offline"));
+    window.addEventListener("online", async () => {
+        setCacheIndicator("syncing", "Reconnecting and refreshing data...");
+        try {
+            await loadStartupData();
+            if (AppState.html5QrCode) {
+                await restartScanner();
+            }
+        } catch (err) {
+            console.warn("Reconnect refresh failed", err);
+        }
+    });
+
+    window.addEventListener("offline", () => setCacheIndicator("offline", "Offline — using cached data if available"));
 
     loadStartupData();
 

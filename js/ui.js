@@ -52,18 +52,6 @@ function showVerifiedUser(user){
         </div>
 
         <div class="info">
-        Unique ID: ${user.id}
-        </div>
-
-        <div class="info">
-        Name: ${user.name}
-        </div>
-
-        <div class="info">
-        Facilitator: ${user.facilitator}
-        </div>
-
-        <div class="info">
         Passcode: ${user.passcode}
         </div>
 
@@ -81,12 +69,12 @@ function showVerifiedUser(user){
         <br><br>
 
         <div class="info">
-        Take Screenshot if QR needs re-printing
+        Tap PRINT or CONTINUE once verification is complete.
         </div>
 
         <br><br>
 
-        <button        onclick="printCurrentScreen()"
+        <button        onclick="printQrLabel('${user.id.replace(/'/g, "\\'")}', 'Verified User QR')"
         style=
             "padding:16px 40px;
             font-size:22px;
@@ -150,29 +138,30 @@ function showResult(res){
             </div>
 
             <div class="info">
-            Unique ID: ${res.id}
-            </div>
-
-            <div class="info">
-            Name: ${res.name}
-            </div>
-
-            <div class="info">
-            Facilitator: ${res.facilitator}
-            </div>
-
-            <div class="info">
             Passcode: ${res.passcode}
             </div>
 
+            <br>
+
+            <img
+            src="https://quickchart.io/qr?text=${encodeURIComponent(res.id)}&size=400"
+            style="
+                width:280px;
+                background:white;
+                padding:10px;
+                border-radius:12px;
+            ">
+
+            <br><br>
+
             <div class="info">
-            Authority: ${AppState.currentAuthority}
+            Tap PRINT or CONTINUE once verification is complete.
             </div>
 
             <br><br>
 
             <button
-                onclick="printCurrentScreen()"
+                onclick="printQrLabel('${res.id.replace(/'/g, "\\'")}', 'Approved QR Code')"
                 style="
                     padding:16px 40px;
                     font-size:22px;
@@ -303,7 +292,7 @@ function showUserCreated(uniqueId){
         <br><br>
 
         <button
-        onclick="printCurrentScreen()"
+        onclick="printQrLabel('${uniqueId.replace(/'/g, "\\'")}', 'New User QR')"
         style="
             padding:16px 40px;
             font-size:22px;

@@ -80,6 +80,9 @@ async function api(action, params = {}, options = {}) {
                 }
                 return cachedData;
             }
+            if (notify) {
+                options.onCacheStatus("error");
+            }
             throw err;
         }
     }
@@ -91,5 +94,8 @@ async function api(action, params = {}, options = {}) {
         return cachedData;
     }
 
+    if (notify) {
+        options.onCacheStatus("error");
+    }
     throw new Error("Offline and no cached data available");
 }

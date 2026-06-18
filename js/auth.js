@@ -116,6 +116,13 @@ function loginAndStart(){
             .style.display =
             "inline-block";
 
+            const loginHelp = document.querySelector(
+                ".login-help"
+            );
+            if(loginHelp){
+                loginHelp.style.display = "none";
+            }
+
             // Start scanner
 
             startScanner();

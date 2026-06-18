@@ -17,9 +17,9 @@ const USER_GUIDE_HTML = `
 <h3>1. Login</h3>
 
 <ul>
-<li>Select your Security Authority from the dropdown.</li>
-<li>Enter your passcode and click LOGIN.</li>
-<li>After login, the QR scanner starts and the MANUAL VERIFY, ADD NEW USER, and HELP buttons appear.</li>
+<li>Use the Authority dropdown and Passcode field on the main screen.</li>
+<li>Click LOGIN to sign in.</li>
+<li>After login, the scanner starts and the action buttons appear.</li>
 </ul>
 
 <h3>2. Scan QR</h3>
