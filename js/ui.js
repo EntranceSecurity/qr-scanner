@@ -1,22 +1,31 @@
-function showBusy(message){
+function showBusy(message, delay = 120){
+    if(AppState.busyTimeout){
+        clearTimeout(AppState.busyTimeout);
+    }
 
-    document.getElementById(
-      "loadingScreen"
-    ).style.display = "flex";
+    AppState.busyTimeout = setTimeout(() => {
+        document.getElementById(
+          "loadingScreen"
+        ).style.display = "flex";
 
-    document.querySelector(
-      "#loadingScreen .info"
-    ).innerText =
-    message || "Please wait...";
+        document.querySelector(
+          "#loadingScreen .info"
+        ).innerText =
+        message || "Please wait...";
 
+        AppState.busyTimeout = null;
+    }, delay);
 }
 
 function hideBusy(){
+    if(AppState.busyTimeout){
+        clearTimeout(AppState.busyTimeout);
+        AppState.busyTimeout = null;
+    }
 
     document.getElementById(
       "loadingScreen"
     ).style.display = "none";
-
 }
 
 function showVerifiedUser(user){
@@ -77,8 +86,21 @@ function showVerifiedUser(user){
 
         <br><br>
 
-        <button
-        onclick="continueScanning()"
+        <button        onclick="printCurrentScreen()"
+        style=
+            "padding:16px 40px;
+            font-size:22px;
+            border:none;
+            border-radius:12px;
+            background:#f1f1f1;
+            color:black;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:10px;
+        ">
+        PRINT
+        </button>
+        <button        onclick="continueScanning()"
         style="
             padding:16px 40px;
             font-size:22px;
@@ -149,6 +171,21 @@ function showResult(res){
 
             <br><br>
 
+            <button
+                onclick="printCurrentScreen()"
+                style="
+                    padding:16px 40px;
+                    font-size:22px;
+                    border:none;
+                    border-radius:12px;
+                    background:#f1f1f1;
+                    color:black;
+                    font-weight:bold;
+                    cursor:pointer;
+                    margin-right:10px;
+                ">
+                PRINT
+            </button>
             <button
                 onclick="continueScanning()"
                 style="
@@ -265,6 +302,21 @@ function showUserCreated(uniqueId){
 
         <br><br>
 
+        <button
+        onclick="printCurrentScreen()"
+        style="
+            padding:16px 40px;
+            font-size:22px;
+            border:none;
+            border-radius:12px;
+            background:#f1f1f1;
+            color:black;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:10px;
+        ">
+        PRINT
+        </button>
         <button
         onclick="continueScanning()"
         style="

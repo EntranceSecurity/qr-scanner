@@ -14,6 +14,8 @@ const AppState = {
 
     scannerWatchdog: null,
 
+    busyTimeout: null,
+
     suggestedUserId: "",
 
     multipleMatches: []

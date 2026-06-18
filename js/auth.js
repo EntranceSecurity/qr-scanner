@@ -147,72 +147,89 @@ function loginAndStart(){
 
 }
 
-function loadAuthorities(){
+function loadAuthoritiesFromData(authorities){
 
-    api("authorities")
-    .then(data => {
+    const ddl =
+    document.getElementById("authority");
 
-        const ddl =
-        document.getElementById("authority");
+    const options = [
+        '<option value="">Select Security Authority</option>'
+    ];
 
-        ddl.innerHTML =
-        '<option value="">Select Security Authority</option>';
+    authorities.forEach(a => {
+        options.push(`<option value="${a}">${a}</option>`);
+    });
 
-        data.authorities.forEach(a => {
+    ddl.innerHTML = options.join("");
+}
 
-            ddl.innerHTML +=
-            `<option value="${a}">${a}</option>`;
+function loadFacilitatorsFromData(facilitators){
 
+    const addUserDDL =
+    document.getElementById(
+      "newFacilitator"
+    );
+
+    const manualDDL =
+    document.getElementById(
+      "manualFacilitator"
+    );
+
+    if(addUserDDL){
+
+        const options = [
+            '<option value="">Select Facilitator</option>'
+        ];
+
+        facilitators.forEach(f => {
+            options.push(`<option value="${f}">${f}</option>`);
         });
 
-    });
+        addUserDDL.innerHTML = options.join("");
+    }
+
+    if(manualDDL){
+
+        const options = [
+            '<option value="">Select Facilitator</option>'
+        ];
+
+        facilitators.forEach(f => {
+            options.push(`<option value="${f}">${f}</option>`);
+        });
+
+        manualDDL.innerHTML = options.join("");
+    }
 
 }
 
-function loadFacilitators(){
-
-    api("facilitators")
+function loadAuthorities(){
+    api("authorities", {}, {
+        cache: true,
+        onCacheStatus: status => {
+            setCacheIndicator(status);
+        }
+    })
     .then(data => {
-
-        const addUserDDL =
-        document.getElementById(
-          "newFacilitator"
-        );
-
-        const manualDDL =
-        document.getElementById(
-          "manualFacilitator"
-        );
-
-        if(addUserDDL){
-
-            addUserDDL.innerHTML =
-            '<option value="">Select Facilitator</option>';
-
-            data.facilitators.forEach(f => {
-
-                addUserDDL.innerHTML +=
-                `<option value="${f}">${f}</option>`;
-
-            });
-
-        }
-
-        if(manualDDL){
-
-            manualDDL.innerHTML =
-            '<option value="">Select Facilitator</option>';
-
-            data.facilitators.forEach(f => {
-
-                manualDDL.innerHTML +=
-                `<option value="${f}">${f}</option>`;
-
-            });
-
-        }
-
+        loadAuthoritiesFromData(data.authorities || []);
+    })
+    .catch(err => {
+        console.warn("Authority refresh failed", err);
     });
+}
 
+function loadFacilitators(){
+    api("facilitators", {}, {
+        cache: true,
+        onCacheStatus: status => {
+            setCacheIndicator(status);
+        }
+    })
+    .then(data => {
+        loadFacilitatorsFromData(data.facilitators || []);
+    })
+    .catch(err => {
+        console.warn("Facilitator refresh failed", err);
+    });
 }
 

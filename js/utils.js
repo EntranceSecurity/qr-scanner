@@ -33,3 +33,7 @@ function startHeartbeat(){
     },300000);
 
 }
+
+function printCurrentScreen(){
+    window.print();
+}

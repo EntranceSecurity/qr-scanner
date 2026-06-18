@@ -22,6 +22,10 @@
 
 <div class="container">
 
+<div id="cacheIndicator" class="cache-indicator cache-indicator-pending">
+    <span class="cache-dot"></span>
+    <span class="cache-label">Cache: Pending</span>
+</div>
 
 <h2>QR Entry Scanner</h2>
 
@@ -52,6 +56,10 @@
     onclick="loginAndStart()">
     LOGIN
 </button>
+
+<div class="login-help">
+    Select your Security Authority and enter the passcode to sign in. After login, the scanner will start automatically and the action buttons will be available.
+</div>
 
 <div
     id="scanner"
